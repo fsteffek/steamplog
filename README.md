@@ -13,18 +13,18 @@ This script saves your game playtime for your steam games.
 
 #### MySQL Server
 If you have your mysql server on your local machine, type:
-```
+```bash
 $ mysql
 ```
 and create a new database and user `steam`
-```
+```sql
 CREATE DATABASE 'steam';
 CREATE USER 'steam';
 GRANT ALL PRIVILEGES ON steam.* TO 'steam';
 ```
 
 Create this table:
-```
+```sql
 CREATE TABLE steam.playtime_forever ( 
     appid INT NOT NULL,
     minutes_played INT,
@@ -32,11 +32,11 @@ CREATE TABLE steam.playtime_forever (
 ```
 
 ### Download
-```
+```bash
 $ git clone https://github.com/fsteffek/steamplaytime.git
 ```
 A softlink makes it more accessible.
-```
+```bash
 $ cd steamplaytime
 $ sudo ln -s steamplaytime.py /usr/local/bin/steamplaytime
 ```
@@ -44,7 +44,7 @@ Add your API Key and your Steam ID to `SteamPlaytimeSecret.py`.
 
 ### Automating
 To automatically run this script every day at 5 in the morning, edit your cronfile.
-```
+```bash
 $ crontab -e
 ```
 Insert the following line at the end.
