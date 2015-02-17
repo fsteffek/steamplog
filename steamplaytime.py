@@ -48,7 +48,7 @@ def main():
     # Request data from Steam server and get a file-like object
     try:
         request = urllib2.urlopen( url )
-    except URLError, e:
+    except urllib2.URLError, e:
         if hasattr(e, 'reason'):
             print >> sys.stderr, 'We failed to reach the server.'
             print >> sys.stderr, 'Reason: ', e.reason
