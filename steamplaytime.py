@@ -15,7 +15,7 @@ from SteamPlaytimeSecret import api_key, steam_id
 def main():
     try:
         # https://docs.python.org/2/library/getopt.html
-        opts, args = getopt.getopt(sys.argv[1:], "hnv")
+        opts, args = getopt.getopt(sys.argv[1:], "hnvpP")
     except getopt.GetoptError as err:
         # print help information and exit
         print str(err)
@@ -23,6 +23,8 @@ def main():
         sys.exit(2)
     verbose = False
     dry_run = False
+    print_only = False
+    pretty_print = False
     for o, a in opts:
         if o == "-n":
             dry_run = True
@@ -31,6 +33,10 @@ def main():
             sys.exit(0)
         elif o == "-v":
             verbose = True
+        elif o == "-p":
+            print_only = True
+        elif o == "-P":
+            pretty_print = True
         else:
             print >> sys.stderr, 'Unhandled option: ', o
             usage()
@@ -60,6 +66,13 @@ def main():
 
     # Decode the request from `file-like object` into json
     json_data = json.load(request)
+
+    if pretty_print:
+        print json.dumps(json_data, indent=4, separators=(',', ': '))
+        sys.exit(0)
+    if print_only:
+        print json_data
+        sys.exit(0)
 
     # Get timestamp to save into database
     time_in_unix = int( time.time() )
