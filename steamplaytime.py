@@ -10,12 +10,24 @@ import time, datetime
 import MySQLdb
 import urllib2
 
-from SteamPlaytimeSecret import api_key, steam_id
+def reset_config():
+    json_ = json.dumps({'API key': 'Insert API key',
+                        'Steam ID': 'Insert Steam ID',
+                       },
+            sort_keys=True, indent=4, separators=(',', ': '))
+    with open('config.json', 'w') as file_:
+        file_.write(json_)
+
+def read_config():
+    with open('config.json', 'r') as file_:
+        json_ = json.load(file_)
+    return (json_['API key'], json_['Steam ID'])
+
 
 def main():
     try:
         # https://docs.python.org/2/library/getopt.html
-        opts, args = getopt.getopt(sys.argv[1:], "hnvpP")
+        opts, args = getopt.getopt(sys.argv[1:], "hnvpP", ["reset-config"])
     except getopt.GetoptError as err:
         # print help information and exit
         print str(err)
@@ -37,10 +49,15 @@ def main():
             print_only = True
         elif o == "-P":
             pretty_print = True
+        elif o == "--reset-config":
+            reset_config()
+            sys.exit(0)
         else:
             print >> sys.stderr, 'Unhandled option: ', o
             usage()
             sys.exit(2)
+
+    (api_key, steam_id) = read_config()
 
     # Create request url
     url  = 'https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/'
