@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # File: steam.py
-# Description: This script downloads the playtimer data of player `steam_id`
+# Description: This script downloads the playtime data of player `steam_id`
 #              and saves it into a MySQL database.
 # Documentation: 06.02.2015
 
