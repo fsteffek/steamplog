@@ -24,6 +24,20 @@ def read_config():
         json_ = json.load(file_)
     return (json_['API key'], json_['Steam ID'])
 
+def update_appnames_file():
+    try:
+        request = urllib2.urlopen('http://api.steampowered.com/ISteamApps/GetAppList/v2')
+    except urllib2.URLError, e:
+        if hasattr(e, 'reason'):
+            print >> sys.stderr, 'We failed to reach ', url
+            print >> sys.stderr, 'Reason: ', e.reason
+        elif hasattr(e, 'code'):
+            print >> sys.stderr, 'The server couldn\'t fulfill the request.'
+            print >> sys.stderr, 'Error code: ', e.code
+        sys.exit(1)
+    ajson = json.load(request)
+    with open('appnames.json', 'w') as afile:
+        json.dump(ajson, afile)
 
 def main():
     global options
@@ -34,6 +48,9 @@ def main():
         sys.exit(0)
     if options.reset_config:
         reset_config()
+    if options.update_appnames:
+        update_appnames_file()
+    if options.reset_config or options.update_appnames:
         sys.exit(0)
 
     (api_key, steam_id) = read_config()
@@ -109,6 +126,8 @@ def makeParser():
                         help='like -p but print it in a human-readable format')
     parser.add_argument('--reset-config', dest='reset_config', action='store_true',
                         help='remove sensitive data from config.json')
+    parser.add_argument('--update-apps', dest='update_appnames', action='store_true',
+                        help='get new apps list from steam (for app names)')
     parser.add_argument('-v', '--verbose', dest='verbose', action='store_true',
                         help='be verbose')
     parser.add_argument('-h', '--help', dest='help', action='store_true',
