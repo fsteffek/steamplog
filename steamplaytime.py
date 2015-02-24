@@ -39,6 +39,20 @@ def update_appnames_file():
     with open('appnames.json', 'w') as afile:
         json.dump(ajson, afile)
 
+def read_appnames_file():
+    filename = 'appnames.json'
+    try:
+        afile = open(filename, 'r')
+        ajson = json.load(afile)
+        afile.close()
+    except IOError, ValueError:
+        print >> sys.stderr, 'Could not read ', filename
+    appnames = {}
+    for app in ajson['applist']['apps']:
+        appnames[ str(app['appid']) ] = app['name']
+    return appnames
+
+
 def main():
     global options
     parser = makeParser()
