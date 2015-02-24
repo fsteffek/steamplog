@@ -4,7 +4,8 @@
 #              and saves it into a MySQL database.
 # Documentation: 06.02.2015
 
-import getopt, sys
+import sys
+import argparse
 import json
 import time, datetime
 import MySQLdb
@@ -25,37 +26,15 @@ def read_config():
 
 
 def main():
-    try:
-        # https://docs.python.org/2/library/getopt.html
-        opts, args = getopt.getopt(sys.argv[1:], "hnvpP", ["reset-config"])
-    except getopt.GetoptError as err:
-        # print help information and exit
-        print str(err)
-        usage()
-        sys.exit(2)
-    verbose = False
-    dry_run = False
-    print_only = False
-    pretty_print = False
-    for o, a in opts:
-        if o == "-n":
-            dry_run = True
-        elif o == "-h":
-            usage()
-            sys.exit(0)
-        elif o == "-v":
-            verbose = True
-        elif o == "-p":
-            print_only = True
-        elif o == "-P":
-            pretty_print = True
-        elif o == "--reset-config":
-            reset_config()
-            sys.exit(0)
-        else:
-            print >> sys.stderr, 'Unhandled option: ', o
-            usage()
-            sys.exit(2)
+    global options
+    parser = makeParser()
+    options = parser.parse_args(sys.argv[1:])
+    if options.help:
+        parser.print_help()
+        sys.exit(0)
+    if options.reset_config:
+        reset_config()
+        sys.exit(0)
 
     (api_key, steam_id) = read_config()
 
@@ -63,9 +42,9 @@ def main():
     url  = 'https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/'
     url += '?include_played_free_games=1&format=json&key=' + api_key
     url += '&steamid=' + steam_id
-    if verbose:
+    if options.verbose:
         print 'Connecting to ' + url
-    if dry_run:
+    if options.dry_run:
         sys.exit(0)
 
     # Request data from Steam server and get a file-like object
@@ -84,10 +63,10 @@ def main():
     # Decode the request from `file-like object` into json
     json_data = json.load(request)
 
-    if pretty_print:
+    if options.pretty_print:
         print json.dumps(json_data, indent=4, separators=(',', ': '))
         sys.exit(0)
-    if print_only:
+    if options.print_only:
         print json_data
         sys.exit(0)
 
@@ -109,7 +88,7 @@ def main():
         query += '%d, ' % game.get(table, 0)
         query += '%d )' % time_in_unix
 
-        if verbose:
+        if options.verbose:
             print query
 
         cursor.execute( query )
@@ -118,6 +97,23 @@ def main():
     db.commit()
     # Disconnect from MySQL server
     db.close()
+
+def makeParser():
+
+    parser = argparse.ArgumentParser(prog='steamplaytime', add_help=False)
+    parser.add_argument('-n', '--dry-run', dest='dry_run', action='store_true',
+                        help='do not connect to steam server')
+    parser.add_argument('-p', '--print-only', dest='print_only', action='store_true',
+                        help='print current playtime data and exit')
+    parser.add_argument('-P', '--pretty-print', dest='pretty_print', action='store_true',
+                        help='like -p but print it in a human-readable format')
+    parser.add_argument('--reset-config', dest='reset_config', action='store_true',
+                        help='remove sensitive data from config.json')
+    parser.add_argument('-v', '--verbose', dest='verbose', action='store_true',
+                        help='be verbose')
+    parser.add_argument('-h', '--help', dest='help', action='store_true',
+                        help='show this help message and exit')
+    return parser
 
 
 if __name__ == "__main__":
