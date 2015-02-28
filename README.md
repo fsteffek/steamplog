@@ -3,6 +3,8 @@ steamplaytime
 
 This script saves your game playtime for your steam games.
 
+Note: steamplaytime is not endorsed, sponsored, affiliated with or otherwise authorized by Valve Corporation.
+
 ### Setup
 
 #### Requirements
