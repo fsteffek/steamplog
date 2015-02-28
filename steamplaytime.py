@@ -13,6 +13,7 @@ import MySQLdb
 import urllib2
 
 from steamplaytime.app import App
+import steamplaytime.plot as plot
 
 
 def main():
