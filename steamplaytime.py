@@ -38,9 +38,6 @@ def main():
         print owned_games
         sys.exit(0)
 
-    # Get timestamp to save into database
-    time_in_unix = int(time.time())
-
     # MySQL data
     db = MySQLdb.connect(
             host="localhost",
@@ -49,23 +46,24 @@ def main():
     # Execute a SQL QUERY using the execute method
     cursor = db.cursor()
 
-    # Crunch data
+    if not options.dry_run:
+        save_to_db(cursor, owned_games)
+
+    # Disconnect from MySQL server
+    db.close()
+
+
+def save_to_db(cursor, owned_games):
+    """Insert playtime data into database"""
+    time_in_unix = int(time.time())  # timestamp for db
     for game in owned_games['games']:
         query = 'INSERT INTO ' + table
         query += ' ( appid, minutes_played, time_of_record ) VALUES ( '
         query += '%d, ' % game.get('appid', 0)
         query += '%d, ' % game.get(table, 0)
         query += '%d )' % time_in_unix
-
-        if options.verbose:
-            print query
-
         cursor.execute(query)
-
-    # Make changes permanent
     db.commit()
-    # Disconnect from MySQL server
-    db.close()
 
 
 def get_owned_games(api_key='', steam_id=''):
