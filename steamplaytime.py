@@ -46,7 +46,7 @@ def main():
     # Execute a SQL QUERY using the execute method
     cursor = db.cursor()
 
-    if not options.dry_run:
+    if options.save:
         save_to_db(cursor, owned_games)
 
     # Disconnect from MySQL server
@@ -148,6 +148,9 @@ def makeParser():
     parser.add_argument(
             '--reset-config', dest='reset_config', action='store_true',
             help='remove sensitive data from config.json')
+    parser.add_argument(
+            '--save', dest='save', action='store_true',
+            help='record new playtime into database')
     parser.add_argument(
             '--update-apps', dest='update_appnames', action='store_true',
             help='get new apps list from steam (for app names)')
