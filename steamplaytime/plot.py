@@ -34,10 +34,9 @@ def plot_n_days(ndays, today, minutes, labels, fname=None, color=None):
     # Display 2009 as 2009 not 9+2e3
     ax.get_xaxis().get_major_formatter().set_useOffset(False)
 
-    # Print bar type plot
+    # Bar type plot
     bottom_ = np.array([0 for i in xrange(len(X))])
     for Y, c in zip(minutes, itertools.cycle(color_)):
-        print Y
         ax.bar(left=X, height=Y, width=0.8, bottom=bottom_, color=c)
         bottom_ += Y
 

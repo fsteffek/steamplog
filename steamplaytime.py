@@ -158,7 +158,6 @@ def makePlot(cursor):
         if max(app.last_day[-14:]) == 0:
             continue  # purge unplayed games
         app.last_day = app.last_day[-14:]
-        print app.name
         for i in xrange(14 - len(app.last_day)):
             app.last_day.insert(0, 0)  # prepend empty slots with `0`
         app_list.append(app)
