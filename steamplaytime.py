@@ -12,17 +12,17 @@ import MySQLdb
 import urllib2
 
 def reset_config():
-    json_ = json.dumps({'API key': 'Insert API key',
-                        'Steam ID': 'Insert Steam ID',
-                       },
+    json_str = json.dumps({'API key': 'Insert API key',
+                           'Steam ID': 'Insert Steam ID',
+                           },
             sort_keys=True, indent=4, separators=(',', ': '))
-    with open('config.json', 'w') as file_:
-        file_.write(json_)
+    with open('config.json', 'w') as a_file:
+        a_file.write(json_str)
 
 def read_config():
-    with open('config.json', 'r') as file_:
-        json_ = json.load(file_)
-    return (json_['API key'], json_['Steam ID'])
+    with open('config.json', 'r') as a_file:
+        json_dict = json.load(a_file)
+    return (json_dict['API key'], json_dict['Steam ID'])
 
 def update_appnames_file():
     try:
@@ -35,22 +35,22 @@ def update_appnames_file():
             print >> sys.stderr, 'The server couldn\'t fulfill the request.'
             print >> sys.stderr, 'Error code: ', e.code
         sys.exit(1)
-    ajson = json.load(request)
-    with open('appnames.json', 'w') as afile:
-        json.dump(ajson, afile)
+    json_dict = json.load(request)
+    with open('appnames.json', 'w') as a_file:
+        json.dump(json_dict, a_file)
 
 def read_appnames_file():
     filename = 'appnames.json'
     try:
-        afile = open(filename, 'r')
-        ajson = json.load(afile)
-        afile.close()
+        a_file = open(filename, 'r')
+        json_dict = json.load(a_file)
+        a_file.close()
     except IOError, ValueError:
         print >> sys.stderr, 'Could not read ', filename
-    appnames = {}
-    for app in ajson['applist']['apps']:
-        appnames[ str(app['appid']) ] = app['name']
-    return appnames
+    app_names = {}
+    for app in json_dict['applist']['apps']:
+        app_names[ str(app['appid']) ] = app['name']
+    return app_names
 
 
 def main():
