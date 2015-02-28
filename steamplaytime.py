@@ -30,6 +30,17 @@ def main():
     if options.reset_config or options.update_appnames:
         sys.exit(0)
 
+    # MySQL data
+    db = MySQLdb.connect(
+            host="localhost",
+            user="steam",
+            db="steam")
+    cursor = db.cursor()
+
+    if options.plot:
+        makePlot(cursor)
+        sys.exit(0)
+
     (api_key, steam_id) = read_config()
 
     owned_games = get_owned_games(api_key, steam_id)
@@ -40,14 +51,6 @@ def main():
     if options.print_only:
         print owned_games
         sys.exit(0)
-
-    # MySQL data
-    db = MySQLdb.connect(
-            host="localhost",
-            user="steam",
-            db="steam")
-    # Execute a SQL QUERY using the execute method
-    cursor = db.cursor()
 
     if options.save:
         save_to_db(cursor, owned_games)
@@ -145,6 +148,29 @@ def read_appnames_file():
     return app_names
 
 
+def makePlot(cursor):
+    app_name = read_appnames_file()
+    app_ids = app_ids_from_db(cursor)
+    app_list = []
+    for app_id in app_ids:
+        app = App(app_id, app_name[str(app_id)])
+        app.get_db_playtime(cursor)
+        if max(app.last_day[-14:]) == 0:
+            continue  # purge unplayed games
+        app.last_day = app.last_day[-14:]
+        print app.name
+        for i in xrange(14 - len(app.last_day)):
+            app.last_day.insert(0, 0)  # prepend empty slots with `0`
+        app_list.append(app)
+    x_all = []
+    y_name = []
+    today = int(time.time())
+    for app in app_list:
+        x_all.append(app.last_day)
+        y_name.append(app.name)
+    plot.plot_2weeks(today, x_all, y_name, 'spt_2weeks.png')
+
+
 def makeParser():
     parser = argparse.ArgumentParser(prog='steamplaytime', add_help=False)
     # parser.add_argument(
@@ -159,6 +185,9 @@ def makeParser():
     parser.add_argument(
             '--reset-config', dest='reset_config', action='store_true',
             help='remove sensitive data from config.json')
+    parser.add_argument(
+            '--plot', dest='plot', action='store_true',
+            help='plot playtime data for last 2 weeks')
     parser.add_argument(
             '--save', dest='save', action='store_true',
             help='record new playtime into database')
