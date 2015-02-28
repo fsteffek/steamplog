@@ -11,9 +11,12 @@ Note: steamplaytime is not endorsed, sponsored, affiliated with or otherwise aut
 * [Steam API Key](http://steamcommunity.com/dev) ([Powered by Steam](http://steampowered.com))
 * Python 2.7.6+ (lower versions untested)
 * MySQL Server
-* MySQLdb for Python (`python-mysqldb`)
+* `python-mysqldb`
+* `python-matplotlib` (for creating graphs)
 
 #### MySQL Server
+Note: The MySQL server will eventually be replaced by an SQLite file.
+
 If you have your mysql server on your local machine, type:
 ```bash
 $ mysql
@@ -37,12 +40,13 @@ CREATE TABLE steam.playtime_forever (
 ```bash
 $ git clone https://github.com/fsteffek/steamplaytime.git
 ```
-A softlink makes it more accessible.
-```bash
-$ cd steamplaytime
-$ sudo ln -s steamplaytime.py /usr/local/bin/steamplaytime
-```
-Add your API Key and your Steam ID to `SteamPlaytimeSecret.py`.
+
+### Usage
+
+After cloning the repo you should run steamplaytime with option `--reset-config`.
+This creates the file `config.json` where you should add your API key and Steam ID.
+
+Run with option `-h` to see all available options.
 
 ### Automating
 To automatically run this script every day at 5 in the morning, edit your cronfile.
@@ -51,6 +55,6 @@ $ crontab -e
 ```
 Insert the following line at the end.
 ```
-0 5 * * * /usr/local/bin/steamplaytime
+0 5 * * * {path-to-steamplaytime.py}/steamplaytime.py --save
 ```
 
