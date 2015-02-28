@@ -12,6 +12,8 @@ import datetime
 import MySQLdb
 import urllib2
 
+from steamplaytime.app import App
+
 
 def main():
     global options
