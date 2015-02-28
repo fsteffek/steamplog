@@ -7,7 +7,8 @@
 import sys
 import argparse
 import json
-import time, datetime
+import time
+import datetime
 import MySQLdb
 import urllib2
 
@@ -29,7 +30,7 @@ def main():
     (api_key, steam_id) = read_config()
 
     # Create request url
-    url  = 'https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/'
+    url = 'https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/'
     url += '?include_played_free_games=1&format=json&key=' + api_key
     url += '&steamid=' + steam_id
     if options.verbose:
@@ -39,7 +40,7 @@ def main():
 
     # Request data from Steam server and get a file-like object
     try:
-        request = urllib2.urlopen( url )
+        request = urllib2.urlopen(url)
     except urllib2.URLError, e:
         if hasattr(e, 'reason'):
             print >> sys.stderr, 'We failed to reach the server.'
@@ -61,12 +62,13 @@ def main():
         sys.exit(0)
 
     # Get timestamp to save into database
-    time_in_unix = int( time.time() )
+    time_in_unix = int(time.time())
 
     # MySQL data
-    db = MySQLdb.connect( host = "localhost"
-                        , user = "steam"
-                        , db = "steam" )
+    db = MySQLdb.connect(
+            host="localhost",
+            user="steam",
+            db="steam")
     # Execute a SQL QUERY using the execute method
     cursor = db.cursor()
 
@@ -81,32 +83,36 @@ def main():
         if options.verbose:
             print query
 
-        cursor.execute( query )
+        cursor.execute(query)
 
     # Make changes permanent
     db.commit()
     # Disconnect from MySQL server
     db.close()
 
+
 def reset_config():
-    json_str = json.dumps({'API key': 'Insert API key',
-                           'Steam ID': 'Insert Steam ID',
-                           },
+    json_str = json.dumps(
+            {'API key': 'Insert API key',
+             'Steam ID': 'Insert Steam ID'},
             sort_keys=True, indent=4, separators=(',', ': '))
     with open('config.json', 'w') as a_file:
         a_file.write(json_str)
+
 
 def read_config():
     with open('config.json', 'r') as a_file:
         json_dict = json.load(a_file)
     return (json_dict['API key'], json_dict['Steam ID'])
 
+
 def update_appnames_file():
+    URL = 'http://api.steampowered.com/ISteamApps/GetAppList/v2'
     try:
-        request = urllib2.urlopen('http://api.steampowered.com/ISteamApps/GetAppList/v2')
+        request = urllib2.urlopen(URL)
     except urllib2.URLError, e:
         if hasattr(e, 'reason'):
-            print >> sys.stderr, 'We failed to reach ', url
+            print >> sys.stderr, 'We failed to reach ', URL
             print >> sys.stderr, 'Reason: ', e.reason
         elif hasattr(e, 'code'):
             print >> sys.stderr, 'The server couldn\'t fulfill the request.'
@@ -115,6 +121,7 @@ def update_appnames_file():
     json_dict = json.load(request)
     with open('appnames.json', 'w') as a_file:
         json.dump(json_dict, a_file)
+
 
 def read_appnames_file():
     filename = 'appnames.json'
@@ -126,27 +133,33 @@ def read_appnames_file():
         print >> sys.stderr, 'Could not read ', filename
     app_names = {}
     for app in json_dict['applist']['apps']:
-        app_names[ str(app['appid']) ] = app['name']
+        app_names[str(app['appid'])] = app['name']
     return app_names
 
 
 def makeParser():
-
     parser = argparse.ArgumentParser(prog='steamplaytime', add_help=False)
-    parser.add_argument('-n', '--dry-run', dest='dry_run', action='store_true',
-                        help='do not connect to steam server')
-    parser.add_argument('-p', '--print-only', dest='print_only', action='store_true',
-                        help='print current playtime data and exit')
-    parser.add_argument('-P', '--pretty-print', dest='pretty_print', action='store_true',
-                        help='like -p but print it in a human-readable format')
-    parser.add_argument('--reset-config', dest='reset_config', action='store_true',
-                        help='remove sensitive data from config.json')
-    parser.add_argument('--update-apps', dest='update_appnames', action='store_true',
-                        help='get new apps list from steam (for app names)')
-    parser.add_argument('-v', '--verbose', dest='verbose', action='store_true',
-                        help='be verbose')
-    parser.add_argument('-h', '--help', dest='help', action='store_true',
-                        help='show this help message and exit')
+    parser.add_argument(
+            '-n', '--dry-run', dest='dry_run', action='store_true',
+            help='do not connect to steam server')
+    parser.add_argument(
+            '-p', '--print-only', dest='print_only', action='store_true',
+            help='print current playtime data and exit')
+    parser.add_argument(
+            '-P', '--pretty-print', dest='pretty_print', action='store_true',
+            help='like -p but print it in a human-readable format')
+    parser.add_argument(
+            '--reset-config', dest='reset_config', action='store_true',
+            help='remove sensitive data from config.json')
+    parser.add_argument(
+            '--update-apps', dest='update_appnames', action='store_true',
+            help='get new apps list from steam (for app names)')
+    parser.add_argument(
+            '-v', '--verbose', dest='verbose', action='store_true',
+            help='be verbose')
+    parser.add_argument(
+            '-h', '--help', dest='help', action='store_true',
+            help='show this help message and exit')
     return parser
 
 
