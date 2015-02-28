@@ -66,6 +66,14 @@ def save_to_db(cursor, owned_games):
     db.commit()
 
 
+def app_ids_from_db(cursor):
+    """Get the app id for each game in database and return as list"""
+    query = 'SELECT DISTINCT appid FROM playtime_forever ORDER BY appid'
+    cursor.execute(query)
+    table = cursor.fetchall()  # returns a tuple of tuples
+    return [row[0] for row in table]
+
+
 def get_owned_games(api_key='', steam_id=''):
     """Get current playtime data from steam server return it"""
     api_url = ['https://api.steampowered.com/'
