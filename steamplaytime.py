@@ -11,47 +11,6 @@ import time, datetime
 import MySQLdb
 import urllib2
 
-def reset_config():
-    json_str = json.dumps({'API key': 'Insert API key',
-                           'Steam ID': 'Insert Steam ID',
-                           },
-            sort_keys=True, indent=4, separators=(',', ': '))
-    with open('config.json', 'w') as a_file:
-        a_file.write(json_str)
-
-def read_config():
-    with open('config.json', 'r') as a_file:
-        json_dict = json.load(a_file)
-    return (json_dict['API key'], json_dict['Steam ID'])
-
-def update_appnames_file():
-    try:
-        request = urllib2.urlopen('http://api.steampowered.com/ISteamApps/GetAppList/v2')
-    except urllib2.URLError, e:
-        if hasattr(e, 'reason'):
-            print >> sys.stderr, 'We failed to reach ', url
-            print >> sys.stderr, 'Reason: ', e.reason
-        elif hasattr(e, 'code'):
-            print >> sys.stderr, 'The server couldn\'t fulfill the request.'
-            print >> sys.stderr, 'Error code: ', e.code
-        sys.exit(1)
-    json_dict = json.load(request)
-    with open('appnames.json', 'w') as a_file:
-        json.dump(json_dict, a_file)
-
-def read_appnames_file():
-    filename = 'appnames.json'
-    try:
-        a_file = open(filename, 'r')
-        json_dict = json.load(a_file)
-        a_file.close()
-    except IOError, ValueError:
-        print >> sys.stderr, 'Could not read ', filename
-    app_names = {}
-    for app in json_dict['applist']['apps']:
-        app_names[ str(app['appid']) ] = app['name']
-    return app_names
-
 
 def main():
     global options
@@ -128,6 +87,48 @@ def main():
     db.commit()
     # Disconnect from MySQL server
     db.close()
+
+def reset_config():
+    json_str = json.dumps({'API key': 'Insert API key',
+                           'Steam ID': 'Insert Steam ID',
+                           },
+            sort_keys=True, indent=4, separators=(',', ': '))
+    with open('config.json', 'w') as a_file:
+        a_file.write(json_str)
+
+def read_config():
+    with open('config.json', 'r') as a_file:
+        json_dict = json.load(a_file)
+    return (json_dict['API key'], json_dict['Steam ID'])
+
+def update_appnames_file():
+    try:
+        request = urllib2.urlopen('http://api.steampowered.com/ISteamApps/GetAppList/v2')
+    except urllib2.URLError, e:
+        if hasattr(e, 'reason'):
+            print >> sys.stderr, 'We failed to reach ', url
+            print >> sys.stderr, 'Reason: ', e.reason
+        elif hasattr(e, 'code'):
+            print >> sys.stderr, 'The server couldn\'t fulfill the request.'
+            print >> sys.stderr, 'Error code: ', e.code
+        sys.exit(1)
+    json_dict = json.load(request)
+    with open('appnames.json', 'w') as a_file:
+        json.dump(json_dict, a_file)
+
+def read_appnames_file():
+    filename = 'appnames.json'
+    try:
+        a_file = open(filename, 'r')
+        json_dict = json.load(a_file)
+        a_file.close()
+    except IOError, ValueError:
+        print >> sys.stderr, 'Could not read ', filename
+    app_names = {}
+    for app in json_dict['applist']['apps']:
+        app_names[ str(app['appid']) ] = app['name']
+    return app_names
+
 
 def makeParser():
 
