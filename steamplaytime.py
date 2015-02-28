@@ -29,36 +29,13 @@ def main():
 
     (api_key, steam_id) = read_config()
 
-    # Create request url
-    url = 'https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/'
-    url += '?include_played_free_games=1&format=json&key=' + api_key
-    url += '&steamid=' + steam_id
-    if options.verbose:
-        print 'Connecting to ' + url
-    if options.dry_run:
-        sys.exit(0)
-
-    # Request data from Steam server and get a file-like object
-    try:
-        request = urllib2.urlopen(url)
-    except urllib2.URLError, e:
-        if hasattr(e, 'reason'):
-            print >> sys.stderr, 'We failed to reach the server.'
-            print >> sys.stderr, 'Reason: ', e.reason
-            sys.exit(1)
-        elif hasattr(e, 'code'):
-            print >> sys.stderr, 'The server couldn\'t fulfill the request.'
-            print >> sys.stderr, 'Error code: ', e.code
-            sys.exit(1)
-
-    # Decode the request from `file-like object` into json
-    json_data = json.load(request)
+    owned_games = get_owned_games(api_key, steam_id)
 
     if options.pretty_print:
-        print json.dumps(json_data, indent=4, separators=(',', ': '))
+        print json.dumps(owned_games, indent=4, separators=(',', ': '))
         sys.exit(0)
     if options.print_only:
-        print json_data
+        print owned_games
         sys.exit(0)
 
     # Get timestamp to save into database
@@ -73,7 +50,7 @@ def main():
     cursor = db.cursor()
 
     # Crunch data
-    for game in json_data['response']['games']:
+    for game in owned_games['games']:
         query = 'INSERT INTO ' + table
         query += ' ( appid, minutes_played, time_of_record ) VALUES ( '
         query += '%d, ' % game.get('appid', 0)
@@ -89,6 +66,28 @@ def main():
     db.commit()
     # Disconnect from MySQL server
     db.close()
+
+
+def get_owned_games(api_key='', steam_id=''):
+    """Get current playtime data from steam server return it"""
+    api_url = ['https://api.steampowered.com/'
+               'IPlayerService/GetOwnedGames/v0001/'
+               '?include_played_free_games=1&format=json',
+               '&key=', api_key,
+               '&steamid=', steam_id]
+    url = ''.join([url_str for url_str in api_url])
+    try:
+        request = urllib2.urlopen(url)
+    except urllib2.URLError, e:
+        if hasattr(e, 'reason'):
+            print >> sys.stderr, 'We failed to reach the server.'
+            print >> sys.stderr, 'Reason: ', e.reason
+        elif hasattr(e, 'code'):
+            print >> sys.stderr, 'The server couldn\'t fulfill the request.'
+            print >> sys.stderr, 'Error code: ', e.code
+        sys.exit(1)
+    response = json.load(request)
+    return response['response']
 
 
 def reset_config():
