@@ -136,9 +136,9 @@ def read_appnames_file():
 
 def makeParser():
     parser = argparse.ArgumentParser(prog='steamplaytime', add_help=False)
-    parser.add_argument(
-            '-n', '--dry-run', dest='dry_run', action='store_true',
-            help='do not connect to steam server')
+    # parser.add_argument(
+    #         '-n', '--dry-run', dest='dry_run', action='store_true',
+    #         help='do not connect to steam server')
     parser.add_argument(
             '-p', '--print-only', dest='print_only', action='store_true',
             help='print current playtime data and exit')
