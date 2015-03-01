@@ -1,8 +1,11 @@
-import matplotlib.pyplot as plt
-import itertools
-import numpy as np
 from datetime import datetime as dt
 from datetime import date, timedelta
+import itertools
+
+import numpy as np
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
 
 def plot_2weeks(today, minutes, labels, fname=None, color=None):
