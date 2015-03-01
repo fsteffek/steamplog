@@ -17,6 +17,9 @@ class App(object):
         previous = 0
         for row in cursor:
             self.date.append(row[0])
-            self.minutes.append(row[1])
-            self.last_day.append(row[1] - previous)
+            if not self.minutes:
+                self.last_day.append(0L)
+            else:
+                self.last_day.append(row[1] - previous)
             previous = row[1]
+            self.minutes.append(row[1])
