@@ -104,14 +104,20 @@ def get_owned_games(api_key='', steam_id=''):
 
 def reset_config():
     json_str = json.dumps(
-            {'API key': 'Insert API key',
-             'Steam ID': 'Insert Steam ID'},
+            {'API key': 'YourKey',
+             'Steam ID': 'YourID'},
             sort_keys=True, indent=4, separators=(',', ': '))
     with open('config.json', 'w') as a_file:
         a_file.write(json_str)
 
 
 def read_config():
+    try:
+        a_file = open('config.json', 'r')
+    except IOError as e:
+        reset_config()
+    else:
+        a_file.close()
     with open('config.json', 'r') as a_file:
         json_dict = json.load(a_file)
     return (json_dict['API key'], json_dict['Steam ID'])
