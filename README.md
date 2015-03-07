@@ -1,9 +1,11 @@
-steamplaytime
+Steamplog
 =============
 
-This script saves your game playtime for your steam games.
+This script logs and plots your game playtime for your steam games.
 
-Note: steamplaytime is not endorsed, sponsored, affiliated with or otherwise authorized by Valve Corporation.
+Note: steamplog can be considered `pre-alpha`.
+
+Note: steamplog is not endorsed, sponsored, affiliated with or otherwise authorized by Valve Corporation.
 
 ### Setup
 
@@ -36,14 +38,9 @@ CREATE TABLE steam.playtime_forever (
     time_of_record INT );
 ```
 
-### Download
-```bash
-$ git clone https://github.com/fsteffek/steamplaytime.git
-```
-
 ### Usage
 
-After cloning the repo you should run steamplaytime with option `--reset-config`.
+After cloning the repo you should run steamplog with option `--reset-config`.
 This creates the file `config.json` where you should add your API key and Steam ID.
 
 Run with option `-h` to see all available options.
@@ -55,6 +52,6 @@ $ crontab -e
 ```
 Insert the following line at the end.
 ```
-0 5 * * * {path-to-steamplaytime.py}/steamplaytime.py --save
+0 5 * * * {path-to-steamplog.py}/steamplog.py --save
 ```
 
