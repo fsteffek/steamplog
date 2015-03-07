@@ -1,4 +1,4 @@
-Steamplog
+SteamPlog
 =============
 
 This script logs and plots your game playtime for your steam games.
