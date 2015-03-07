@@ -1,8 +1,6 @@
 #!/usr/bin/python
-# File: steam.py
-# Description: This script downloads the playtime data of player `steam_id`
-#              and saves it into a MySQL database.
-# Documentation: 06.02.2015
+# File: steamplog.py
+# Description: Steamplog logs and plots yout playtime on steam
 
 import sys
 import argparse
@@ -12,8 +10,8 @@ import datetime
 import MySQLdb
 import urllib2
 
-from steamplaytime.app import App
-import steamplaytime.plot as plot
+from steamplog.app import App
+import steamplog.plot as plot
 
 
 def main(argv=None):
@@ -173,7 +171,7 @@ def makePlot(cursor):
 
 
 def makeParser():
-    parser = argparse.ArgumentParser(prog='steamplaytime', add_help=False)
+    parser = argparse.ArgumentParser(prog='steamplog', add_help=False)
     # parser.add_argument(
     #         '-n', '--dry-run', dest='dry_run', action='store_true',
     #         help='do not connect to steam server')

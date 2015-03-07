@@ -65,7 +65,7 @@ def plot_n_days(ndays, today, minutes, labels, fname=None, color=None):
                     borderaxespad=0)
 
     # Title
-    title_ = 'Steam playtime ' + monday.strftime('%Y-%m-%d')
+    title_ = 'Steam Plog ' + monday.strftime('%Y-%m-%d')
     title_ += ' - ' + day_dt.strftime('%Y-%m-%d')
     plt.title(title_)
 
