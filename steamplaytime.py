@@ -16,10 +16,12 @@ from steamplaytime.app import App
 import steamplaytime.plot as plot
 
 
-def main():
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv
     global options
     parser = makeParser()
-    options = parser.parse_args(sys.argv[1:])
+    options = parser.parse_args(argv[1:])
     if options.help:
         parser.print_help()
         sys.exit(0)
@@ -203,4 +205,4 @@ def makeParser():
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
