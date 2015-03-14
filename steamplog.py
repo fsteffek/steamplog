@@ -18,6 +18,8 @@ def main(argv=None):
     if argv is None:
         argv = sys.argv
     global options
+    global application_name
+    application_name = argv[0]
     parser = makeParser()
     options = parser.parse_args(argv[1:])
     if options.help:
@@ -62,6 +64,9 @@ def main(argv=None):
 def save_to_db(cursor, owned_games):
     """Insert playtime data into database"""
     time_in_unix = int(time.time())  # timestamp for db
+    if 'games' not in owned_games:
+        print >> sys.stderr, application_name + ': NOTICE: No games found'
+        return
     for game in owned_games['games']:
         query = 'INSERT INTO ' + table
         query += ' ( appid, minutes_played, time_of_record ) VALUES ( '
