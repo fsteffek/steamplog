@@ -8,10 +8,10 @@ import json
 import time
 import datetime
 import MySQLdb
-import urllib2
 
 from steamplog.app import App
 import steamplog.plot as plot
+import steamplog.utils as utils
 
 
 def main(argv=None):
@@ -28,7 +28,7 @@ def main(argv=None):
     if options.reset_config:
         reset_config()
     if options.update_appnames:
-        update_appnames_file()
+        utils.update_appnames_file()
     if options.reset_config or options.update_appnames:
         sys.exit(0)
 
@@ -45,7 +45,7 @@ def main(argv=None):
 
     (api_key, steam_id) = read_config()
 
-    owned_games = get_owned_games(api_key, steam_id)
+    owned_games = utils.get_owned_games(api_key, steam_id)
 
     if options.pretty_print:
         print json.dumps(owned_games, indent=4, separators=(',', ': '))
@@ -85,28 +85,6 @@ def app_ids_from_db(cursor):
     return [row[0] for row in table]
 
 
-def get_owned_games(api_key='', steam_id=''):
-    """Get current playtime data from steam server return it"""
-    api_url = ['https://api.steampowered.com/'
-               'IPlayerService/GetOwnedGames/v0001/'
-               '?include_played_free_games=1&format=json',
-               '&key=', api_key,
-               '&steamid=', steam_id]
-    url = ''.join([url_str for url_str in api_url])
-    try:
-        request = urllib2.urlopen(url)
-    except urllib2.URLError, e:
-        if hasattr(e, 'reason'):
-            print >> sys.stderr, 'We failed to reach the server.'
-            print >> sys.stderr, 'Reason: ', e.reason
-        elif hasattr(e, 'code'):
-            print >> sys.stderr, 'The server couldn\'t fulfill the request.'
-            print >> sys.stderr, 'Error code: ', e.code
-        sys.exit(1)
-    response = json.load(request)
-    return response['response']
-
-
 def reset_config():
     json_str = json.dumps(
             {'API key': 'YourKey',
@@ -126,23 +104,6 @@ def read_config():
     with open('config.json', 'r') as a_file:
         json_dict = json.load(a_file)
     return (json_dict['API key'], json_dict['Steam ID'])
-
-
-def update_appnames_file():
-    URL = 'http://api.steampowered.com/ISteamApps/GetAppList/v2'
-    try:
-        request = urllib2.urlopen(URL)
-    except urllib2.URLError, e:
-        if hasattr(e, 'reason'):
-            print >> sys.stderr, 'We failed to reach ', URL
-            print >> sys.stderr, 'Reason: ', e.reason
-        elif hasattr(e, 'code'):
-            print >> sys.stderr, 'The server couldn\'t fulfill the request.'
-            print >> sys.stderr, 'Error code: ', e.code
-        sys.exit(1)
-    json_dict = json.load(request)
-    with open('appnames.json', 'w') as a_file:
-        json.dump(json_dict, a_file)
 
 
 def read_appnames_file():
