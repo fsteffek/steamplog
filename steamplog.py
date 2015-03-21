@@ -31,6 +31,8 @@ def main(argv=None):
         utils.update_appnames_file()
     if options.reset_config or options.update_appnames:
         sys.exit(0)
+    if not options.filename:
+        options.filename = 'output.png'
 
     # MySQL data
     db = MySQLdb.connect(
@@ -139,7 +141,7 @@ def makePlot(cursor):
     for app in app_list:
         x_all.append(app.last_day)
         y_name.append(app.name)
-    plot.plot_2weeks(today, x_all, y_name, 'spt_2weeks.png')
+    plot.plot_2weeks(today, x_all, y_name, options.filename)
 
 
 def makeParser():
@@ -159,6 +161,9 @@ def makeParser():
     parser.add_argument(
             '--plot', dest='plot', action='store_true',
             help='plot playtime data for last 2 weeks')
+    parser.add_argument(
+            '-f', dest='filename',
+            help='FILENAME of the plotted image')
     parser.add_argument(
             '--save', dest='save', action='store_true',
             help='record new playtime into database')
