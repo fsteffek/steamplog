@@ -69,6 +69,7 @@ def save_to_db(cursor, owned_games):
     if 'games' not in owned_games:
         print >> sys.stderr, application_name + ': NOTICE: No games found'
         return
+    table = 'playtime_forever'
     for game in owned_games['games']:
         query = 'INSERT INTO ' + table
         query += ' ( appid, minutes_played, time_of_record ) VALUES ( '
