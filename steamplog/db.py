@@ -1,5 +1,6 @@
 import MySQLdb
 import time
+from datetime import datetime
 import sys
 
 
@@ -61,6 +62,38 @@ class steamplog_db(object):
             query += '%d, ' % game.get(table, 0)
             query += '%d )' % time_in_unix
             self.cursor.execute(query)
+        self.conn.commit()
+
+    def log_playtime_new(self, data, log_date):
+        """Insert playtime data into database"""
+        time_in_unix = int((log_date - datetime(1970, 1, 1)).total_seconds())
+        table = 'playtime'
+        for app_data in data:
+            # Update current minutes_played
+            self.cursor.execute(
+                    'SELECT app_id, logged_at '
+                    'FROM ' + table + ' '
+                    'WHERE app_id=%s AND logged_at=%s',
+                    (app_data[0], time_in_unix))
+            if self.cursor.fetchall():
+                self.cursor.execute(
+                        'UPDATE ' + table + ' '
+                        'SET minutes_played=%s '
+                        'WHERE app_id=%s AND logged_at=%s',
+                        (app_data[1], app_data[0], time_in_unix))
+                continue
+            # ... or insert new log
+            self.cursor.execute(
+                    'SELECT app_id, minutes_played, logged_at '
+                    'FROM ' + table + ' '
+                    'WHERE app_id=%s AND minutes_played=%s',
+                    (app_data[0], app_data[1]))
+            if not self.cursor.fetchall():
+                self.cursor.execute(
+                        'INSERT INTO ' + table + ' '
+                        '(app_id, minutes_played, logged_at) '
+                        'VALUES (%s, %s, %s)',
+                        (app_data[0], app_data[1], time_in_unix))
         self.conn.commit()
 
     def app_ids_from_db(self):
