@@ -7,9 +7,9 @@ import argparse
 import json
 import time
 import datetime
-import MySQLdb
 
 from steamplog.app import App
+from steamplog.db import steamplog_db
 import steamplog.plot as plot
 import steamplog.utils as utils
 
@@ -34,20 +34,19 @@ def main(argv=None):
     if not options.filename:
         options.filename = 'output.png'
 
-    # MySQL data
-    db = MySQLdb.connect(
-            host="localhost",
-            user="steam",
-            db="steam")
-    cursor = db.cursor()
+    db = steamplog_db()
 
     if options.plot:
-        makePlot(cursor)
+        makePlot(db)
         sys.exit(0)
 
     (api_key, steam_id) = read_config()
 
     owned_games = utils.get_owned_games(api_key, steam_id)
+
+    if 'games' not in owned_games:
+        print >> sys.stderr, application_name + ': NOTICE: No games found'
+        sys.exit(0)
 
     if options.pretty_print:
         print json.dumps(owned_games, indent=4, separators=(',', ': '))
@@ -57,35 +56,10 @@ def main(argv=None):
         sys.exit(0)
 
     if options.save:
-        save_to_db(cursor, owned_games)
+        db.log_playtime(owned_games)
 
-    # Disconnect from MySQL server
+    # Disconnect from database
     db.close()
-
-
-def save_to_db(cursor, owned_games):
-    """Insert playtime data into database"""
-    time_in_unix = int(time.time())  # timestamp for db
-    if 'games' not in owned_games:
-        print >> sys.stderr, application_name + ': NOTICE: No games found'
-        return
-    table = 'playtime_forever'
-    for game in owned_games['games']:
-        query = 'INSERT INTO ' + table
-        query += ' ( appid, minutes_played, time_of_record ) VALUES ( '
-        query += '%d, ' % game.get('appid', 0)
-        query += '%d, ' % game.get(table, 0)
-        query += '%d )' % time_in_unix
-        cursor.execute(query)
-    db.commit()
-
-
-def app_ids_from_db(cursor):
-    """Get the app id for each game in database and return as list"""
-    query = 'SELECT DISTINCT appid FROM playtime_forever ORDER BY appid'
-    cursor.execute(query)
-    table = cursor.fetchall()  # returns a tuple of tuples
-    return [row[0] for row in table]
 
 
 def reset_config():
@@ -123,13 +97,13 @@ def read_appnames_file():
     return app_names
 
 
-def makePlot(cursor):
+def makePlot(db):
     app_name = read_appnames_file()
-    app_ids = app_ids_from_db(cursor)
+    app_ids = db.app_ids_from_db()
     app_list = []
     for app_id in app_ids:
         app = App(app_id, app_name[str(app_id)])
-        app.get_db_playtime(cursor)
+        app.get_db_playtime(db.cursor)
         if max(app.last_day[-14:]) == 0:
             continue  # purge unplayed games
         app.last_day = app.last_day[-14:]
