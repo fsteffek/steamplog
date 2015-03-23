@@ -4,6 +4,9 @@ from datetime import datetime
 import sys
 
 
+import utils
+
+
 class steamplog_db(object):
     def __init__(self):
         self.conn = MySQLdb.connect(
@@ -42,6 +45,23 @@ class steamplog_db(object):
                 'PRIMARY KEY (app_id, logged_at)'
                 ')'
             )
+
+    def migrate(self):
+        self.cursor.execute(
+                'SELECT DISTINCT time_of_record '
+                'FROM playtime_forever '
+                'ORDER BY time_of_record'
+            )
+        result = [row[0] for row in self.cursor.fetchall()]
+        total = float(len(result))
+        for i, row in enumerate(result):
+            utils.update_progress(float(i)/total)
+            self.cursor.execute(
+                'SELECT * FROM playtime_forever WHERE time_of_record=%s',
+                (row,))
+            data = [(x[0], x[1]) for x in self.cursor.fetchall()]
+            now = utils.round_datetime(datetime.datetime.utcfromtimestamp(row))
+            self.log_playtime_new(data, now)
 
     def update_appnames(self, app_list):
         self.cursor.executemany(
