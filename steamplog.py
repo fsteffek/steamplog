@@ -28,7 +28,7 @@ def main(argv=None):
     if options.reset_config:
         reset_config()
     if options.update_appnames:
-        utils.update_appnames_file()
+        utils.update_appname(utils.get_app_list())
     if options.reset_config or options.update_appnames:
         sys.exit(0)
     if not options.filename:

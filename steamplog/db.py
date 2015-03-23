@@ -8,11 +8,20 @@ class steamplog_db(object):
         self.conn = MySQLdb.connect(
                 host="localhost",
                 user="steam",
-                db="steam")
+                db="steam",
+                charset="utf8")
         self.cursor = self.conn.cursor()
 
     def close(self):
         self.conn.close()
+
+    def update_appnames(self, app_list):
+        self.cursor.executemany(
+            'REPLACE INTO app_names'
+            '(app_id, name)'
+            'VALUES (%s, %s)', app_list
+            )
+        self.conn.commit()
 
     def log_playtime(self, owned_games):
         """Insert playtime data into database"""

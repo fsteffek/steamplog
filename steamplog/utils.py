@@ -37,7 +37,7 @@ def get_owned_games(api_key='', steam_id=''):
     return response['response']
 
 
-def update_appnames_file():
+def get_app_list():
     URL = 'http://api.steampowered.com/ISteamApps/GetAppList/v2'
     try:
         request = urllib2.urlopen(URL)
@@ -50,5 +50,5 @@ def update_appnames_file():
             print >> sys.stderr, 'Error code: ', e.code
         sys.exit(1)
     json_dict = json.load(request)
-    with open('appnames.json', 'w') as a_file:
-        json.dump(json_dict, a_file)
+    return [(app['appid'], app['name'])
+            for app in json_dict['applist']['apps']]
