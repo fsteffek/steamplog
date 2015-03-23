@@ -36,6 +36,8 @@ def main(argv=None):
 
     db = steamplog_db()
 
+    db.configure()
+
     if options.plot:
         makePlot(db)
         sys.exit(0)

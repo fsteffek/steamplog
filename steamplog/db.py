@@ -15,6 +15,33 @@ class steamplog_db(object):
     def close(self):
         self.conn.close()
 
+    def configure(self):
+        self.cursor.execute(
+            'SELECT * FROM information_schema.tables '
+            'WHERE table_name = "app_names" LIMIT 1'
+        )
+        if not self.cursor.fetchall():
+            self.cursor.execute(
+                'CREATE TABLE app_names ('
+                'app_id int(11) NOT NULL, '
+                'name text COLLATE utf8_unicode_ci, '
+                'PRIMARY KEY (app_id)'
+                ') DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci'
+            )
+        self.cursor.execute(
+            'SELECT * FROM information_schema.tables '
+            'WHERE table_name = "playtime" LIMIT 1'
+        )
+        if not self.cursor.fetchall():
+            self.cursor.execute(
+                'CREATE TABLE playtime ('
+                'app_id int(11) NOT NULL, '
+                'logged_at int(11) NOT NULL, '
+                'minutes_played int(11) NOT NULL, '
+                'PRIMARY KEY (app_id, logged_at)'
+                ')'
+            )
+
     def update_appnames(self, app_list):
         self.cursor.executemany(
             'REPLACE INTO app_names'
