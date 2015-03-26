@@ -122,3 +122,13 @@ class steamplog_db(object):
         self.cursor.execute(query)
         table = self.cursor.fetchall()  # returns a tuple of tuples
         return [row[0] for row in table]
+
+    def fetch_playtimes_range(self, app_id, dt_from, dt_to):
+        unix_from = int((dt_from - datetime(1970, 1, 1)).total_seconds())
+        unix_to = int((dt_to - datetime(1970, 1, 1)).total_seconds())
+        self.cursor.execute(
+                'SELECT app_id, logged_at, minutes_played '
+                'FROM playtime '
+                'WHERE app_id=%s AND %s <= logged_at AND logged_at <= %s',
+                (app_id, unix_from, unix_to))
+        return self.cursor.fetchall()
