@@ -47,7 +47,7 @@ def main(argv=None):
     owned_games = utils.get_owned_games(api_key, steam_id)
 
     if 'games' not in owned_games:
-        print >> sys.stderr, application_name + ': NOTICE: No games found'
+        print >> sys.stderr, application_name + ': ERROR: No games found'
         sys.exit(0)
 
     if options.pretty_print:
