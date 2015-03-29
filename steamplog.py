@@ -34,15 +34,15 @@ def main(argv=None):
     if not options.filename:
         options.filename = 'output.png'
 
-    db = steamplog_db()
+    (api_key, steam_id, db_host) = read_config()
+
+    db = steamplog_db(db_host)
 
     db.configure()
 
     if options.plot:
         makePlot(db)
         sys.exit(0)
-
-    (api_key, steam_id) = read_config()
 
     owned_games = utils.get_owned_games(api_key, steam_id)
 
@@ -67,7 +67,8 @@ def main(argv=None):
 def reset_config():
     json_str = json.dumps(
             {'API key': 'YourKey',
-             'Steam ID': 'YourID'},
+             'Steam ID': 'YourID',
+             'MySQL host': 'localhost'},
             sort_keys=True, indent=4, separators=(',', ': '))
     with open('config.json', 'w') as a_file:
         a_file.write(json_str)
@@ -82,7 +83,10 @@ def read_config():
         a_file.close()
     with open('config.json', 'r') as a_file:
         json_dict = json.load(a_file)
-    return (json_dict['API key'], json_dict['Steam ID'])
+    config_tuple = (json_dict['API key'],
+                    json_dict['Steam ID'],
+                    json_dict['MySQL host'])
+    return config_tuple
 
 
 def read_appnames_file():

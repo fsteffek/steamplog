@@ -8,9 +8,9 @@ import utils
 
 
 class steamplog_db(object):
-    def __init__(self):
+    def __init__(self, host):
         self.conn = MySQLdb.connect(
-                host="localhost",
+                host=host,
                 user="steam",
                 db="steam",
                 charset="utf8")
