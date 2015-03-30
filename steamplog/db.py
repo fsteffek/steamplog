@@ -55,12 +55,14 @@ class steamplog_db(object):
         result = [row[0] for row in self.cursor.fetchall()]
         total = float(len(result))
         for i, row in enumerate(result):
+            print datetime.utcfromtimestamp(row)
             utils.update_progress(float(i)/total)
             self.cursor.execute(
                 'SELECT * FROM playtime_forever WHERE time_of_record=%s',
                 (row,))
-            data = [(x[0], x[1]) for x in self.cursor.fetchall()]
-            now = utils.round_datetime(datetime.datetime.utcfromtimestamp(row))
+            result = self.cursor.fetchall()
+            data = [(x[0], x[1]) for x in result]
+            now = utils.round_datetime(datetime.utcfromtimestamp(row))
             self.log_playtime_new(data, now)
 
     def update_appnames(self, app_list):
@@ -86,6 +88,8 @@ class steamplog_db(object):
 
     def log_playtime_new(self, data, log_date):
         """Insert playtime data into database"""
+        # data == [(app_id, minutes_played)]
+        # log_date == datetime.datetime
         time_in_unix = int((log_date - datetime(1970, 1, 1)).total_seconds())
         table = 'playtime'
         for app_data in data:
@@ -131,4 +135,19 @@ class steamplog_db(object):
                 'FROM playtime '
                 'WHERE app_id=%s AND %s <= logged_at AND logged_at <= %s',
                 (app_id, unix_from, unix_to))
+        return self.cursor.fetchall()
+
+    def fetch_app_ids_range(self, dt_from, dt_to):
+        unix_from = int((dt_from - datetime(1970, 1, 1)).total_seconds())
+        unix_to = int((dt_to - datetime(1970, 1, 1)).total_seconds())
+        self.cursor.execute(
+                'SELECT app_id, logged_at FROM playtime '
+                'WHERE %s <= logged_at AND logged_at <= %s GROUP BY app_id',
+                (unix_from, unix_to))
+        return self.cursor.fetchall()
+
+    def get_app_name(self, app_id):
+        self.cursor.execute(
+                'SELECT app_id, name FROM app_names WHERE app_id = %s',
+                (app_id))
         return self.cursor.fetchall()
