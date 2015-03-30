@@ -1,6 +1,29 @@
 #!/usr/bin/python
-# File: steamplog.py
-# Description: Steamplog logs and plots yout playtime on steam
+"""steamplog - log and plot your steam gaming time
+
+usage:
+  steamplog.py log
+  steamplog.py plot [bar | point | line] [-a | [<DATE_FROM>] [<DATE_TO>]]
+                    [-lc] [-o FILE | -i] [-v]
+  steamplog.py update-appnames
+
+plot options:
+  -a, --all         plot every available playtime
+  [<DATE_FROM>]     include every playtime from this date (format: YYYY-MM-DD)
+                    [default: last 14 days]
+  [<DATE_TO>]       include every playtime from this date (format: YYYY-MM-DD)
+                    [default: today]
+  -c, --color       top 5 games have different colors
+  -l, --legend      include a legend
+  -o FILENAME, --output FILENAME
+                    FILENAME of the output image without extension
+  -i, --individual  plot each game in a new image
+
+other:
+  -v, --verbose  be verbose
+  -h, --help     show this help
+
+"""
 
 import sys
 import argparse
@@ -12,6 +35,7 @@ from steamplog.app import App
 from steamplog.db import steamplog_db
 import steamplog.plot as plot
 import steamplog.utils as utils
+from docopt import docopt
 
 
 def main(argv=None):
@@ -19,17 +43,15 @@ def main(argv=None):
         argv = sys.argv
     global options
     global application_name
+    options = docopt(__doc__, argv=argv[1:])
+    print options
+    #sys.exit(0)
     application_name = argv[0]
-    parser = makeParser()
-    options = parser.parse_args(argv[1:])
-    if options.help:
-        parser.print_help()
-        sys.exit(0)
-    if options.reset_config:
-        reset_config()
-        sys.exit(0)
-    if not options.filename:
-        options.filename = 'output.png'
+    #parser = makeParser()
+    #options = parser.parse_args(argv[1:])
+    #if options.reset_config:
+    #    reset_config()
+    #    sys.exit(0)
 
     (api_key, steam_id, db_host) = read_config()
 
@@ -37,32 +59,33 @@ def main(argv=None):
 
     db.configure()
 
-    if options.update_appnames:
+    if options['update-appnames']:
         db.update_appnames(utils.get_app_list())
+        db.close()
         sys.exit(0)
 
-    if options.plot:
-        if options.plot_type is None:
-            options.plot_type = 'bar'
+    if options['plot']:
         #db.migrate()
         print 'Plotting'
         makePlot2(db)
+        db.close()
         sys.exit(0)
 
     owned_games = utils.get_owned_games(api_key, steam_id)
 
     if 'games' not in owned_games:
         print >> sys.stderr, application_name + ': ERROR: No games found'
+        db.close()
         sys.exit(0)
 
-    if options.pretty_print:
-        print json.dumps(owned_games, indent=4, separators=(',', ': '))
-        sys.exit(0)
-    if options.print_only:
-        print owned_games
-        sys.exit(0)
+    #if options.pretty_print:
+    #    print json.dumps(owned_games, indent=4, separators=(',', ': '))
+    #    sys.exit(0)
+    #if options.print_only:
+    #    print owned_games
+    #    sys.exit(0)
 
-    if options.save:
+    if options['log']:
         data = [(x['appid'], x['playtime_forever']) for x in
                 owned_games['games']]
         now = utils.round_datetime(datetime.datetime.utcnow())
@@ -132,25 +155,29 @@ def makePlot(db):
     for app in app_list:
         x_all.append(app.last_day)
         y_name.append(app.name)
-    plot.plot_2weeks(today, x_all, y_name, options.filename)
+    plot.plot_2weeks(today, x_all, y_name, options['-f'])
 
 def parse_date(date):
     return datetime.datetime.strptime(date, "%Y-%m-%d")
 
 def makePlot2(db):
     import copy
-    if options.date_to:
-        dt_to = parse_date(options.date_to)
-    else:
+    if options['<DATE_TO>'] == None:
         dt_to = datetime.datetime.now()
-        dt_to = datetime.datetime(dt_to.year, dt_to.month, dt_to.day)
-    if options.date_from:
-        dt_from = parse_date(options.date_from)
     else:
+        dt_to = parse_date(options['<DATE_TO>'])
+    if options['<DATE_FROM>'] == None:
         dt_from = dt_to - datetime.timedelta(days=14)
-    if options.date_all:
+    else:
+        dt_from = parse_date(options['<DATE_FROM>'])
+    if options['--all']:
         dt_to = datetime.datetime.now()
         dt_from = datetime.datetime(2014, 6, 10)
+    plot_type = 'bar'
+    if options['point']:
+        plot_type = 'point'
+    if options['line']:
+        plot_type = 'line'
     apps_in_range = db.fetch_app_ids_range(dt_from, dt_to)
     app_list = []
     for application in apps_in_range:
@@ -177,10 +204,10 @@ def makePlot2(db):
         print >> sys.stderr, info
         sys.exit(0)
     # 3 different plotting options
-    # Combine all minutes off all apps
-    if options.plot_detailed:  # different color apps
+    if options['--color']:  # different color apps
         data = []
         offset = {}
+        # Combine all minutes off all apps
         for app in app_list:
             one_data = []
             for d, m in zip(app.date, app.last_day):
@@ -192,15 +219,17 @@ def makePlot2(db):
                 #print offset
             data.append(copy.copy(one_data))
             one_data[:] = []
-        if options.plot_legend:
+        if options['--legend']:
             legend = [app.name for app in app_list[:5]] + ['Other']
         else:
             legend = None
-        plot.plot(data, fname='plot_detailed', plot_type='bar',
+        if options['--output'] is None:
+            options['--output'] = 'plot_detailed'
+        plot.plot(data, fname=options['--output'], plot_type='bar',
                   legend=legend,
                   title='Steamplog (detailed)')
-        print '\'plot_detailed.png\''
-    elif options.plot_separate:
+        print '\'' + options['--output'] + '.png\''
+    elif options['--individual']:
         for app in app_list:
             app_data = {}
             for date, minutes in zip(app.date, app.last_day):
@@ -213,15 +242,17 @@ def makePlot2(db):
                      app_data[key]) for key in app_data]
             data.sort()
             plot.plot(data, fname='plots/'+app.name,
-                      plot_type=options.plot_type, title=app.name)
-            print '\'plots/'+app.name+'.png\''
+                      plot_type=plot_type, title=app.name)
+            print '\'plots/' + app.name + '.png\''
             app_data.clear()
             data[:] = []
     else: # plot all in one plot
+        if options['--output'] is None:
+            options['--output'] = 'plot_all'
         data = merge_playtimes(app_list)
-        plot.plot(data, fname='plot_all', plot_type=options.plot_type,
+        plot.plot(data, fname=options['--output'], plot_type=plot_type,
                   title='Steamplog')
-        print '\'plot_all.png\''
+        print '\'' + options['--output'] + '.png\''
 
 def merge_playtimes(app_list):
     playtime = {}
@@ -230,65 +261,6 @@ def merge_playtimes(app_list):
             playtime[d] = playtime[d] + m if d in playtime else m
     return [(datetime.datetime.utcfromtimestamp(d),
              playtime[d]) for d in playtime]
-
-
-def makeParser():
-    parser = argparse.ArgumentParser(prog='steamplog', add_help=False)
-    # parser.add_argument(
-    #         '-n', '--dry-run', dest='dry_run', action='store_true',
-    #         help='do not connect to steam server')
-    group1 = parser.add_mutually_exclusive_group()
-    group1.add_argument(
-            '-p', '--print-only', dest='print_only', action='store_true',
-            help='print current playtime data and exit')
-    group1.add_argument(
-            '-P', '--pretty-print', dest='pretty_print', action='store_true',
-            help='like -p but print it in a human-readable format')
-    group1.add_argument(
-            '--reset-config', dest='reset_config', action='store_true',
-            help='remove sensitive data from config.json')
-    parser.add_argument(
-            '--plot', dest='plot', action='store_true',
-            help='plot playtime data for last 2 weeks')
-    parser.add_argument(
-            '-f', dest='filename',
-            help='FILENAME of the plotted image')
-    parser.add_argument(
-            '--from', dest='date_from',
-            help='datetime from in format Y-m-d (e.g. 2000-1-1)')
-    parser.add_argument(
-            '--to', dest='date_to',
-            help='datetime to in format Y-m-d (e.g. 2000-1-1)')
-    parser.add_argument(
-            '--all', dest='date_all', action='store_true',
-            help='print all available data')
-    parser.add_argument(
-            '--plot_type', dest='plot_type', choices=['bar','point','line'],
-            help='plot as bar, point or line')
-
-    group_content = parser.add_mutually_exclusive_group()
-    group_content.add_argument(
-            '--detailed', dest='plot_detailed', action='store_true',
-            help='each game has its own color')
-    group_content.add_argument(
-            '--separate', dest='plot_separate', action='store_true',
-            help='each game has its own plot')
-    parser.add_argument(
-            '--legend', dest='plot_legend', action='store_true',
-            help='add legend to plot')
-    group1.add_argument(
-            '--save', dest='save', action='store_true',
-            help='record new playtime into database')
-    group1.add_argument(
-            '--update-apps', dest='update_appnames', action='store_true',
-            help='get new apps list from steam (for app names)')
-    parser.add_argument(
-            '-v', '--verbose', dest='verbose', action='store_true',
-            help='be verbose')
-    parser.add_argument(
-            '-h', '--help', dest='help', action='store_true',
-            help='show this help message and exit')
-    return parser
 
 
 if __name__ == "__main__":
