@@ -109,6 +109,8 @@ def plot(data, legend=None, plot_type='bar', width=800, height=450,
         if type(data[0]) is list:
             color_ = ['#89adba', '#b4da45', '#b84d1f', '#57739d',
                       '#b7b395', '#c98d33']  # '#89adba', '#b7b395']
+            if len(data) < len(color_):
+                color_ = color_[:len(data)]
             for messung, color4plot in \
                     itertools.izip_longest(data, color_, fillvalue=color_[-1]):
                 # stack data on top of each other
