@@ -178,6 +178,7 @@ def makePlot2(db):
         plot_type = 'point'
     if options['line']:
         plot_type = 'line'
+    xlim = (dt_from, dt_to)  # TODO: add commandline switch
     apps_in_range = db.fetch_app_ids_range(dt_from, dt_to)
     app_list = []
     for application in apps_in_range:
@@ -225,7 +226,7 @@ def makePlot2(db):
             legend = None
         if options['--output'] is None:
             options['--output'] = 'plot_detailed'
-        plot.plot(data, fname=options['--output'], plot_type='bar',
+        plot.plot(data, xlim=xlim, fname=options['--output'], plot_type='bar',
                   legend=legend,
                   title='Steamplog (detailed)')
         print '\'' + options['--output'] + '.png\''
@@ -241,7 +242,7 @@ def makePlot2(db):
             data = [(datetime.datetime.utcfromtimestamp(key),
                      app_data[key]) for key in app_data]
             data.sort()
-            plot.plot(data, fname='plots/'+app.name,
+            plot.plot(data, xlim=xlim, fname='plots/'+app.name,
                       plot_type=plot_type, title=app.name)
             print '\'plots/' + app.name + '.png\''
             app_data.clear()
@@ -250,7 +251,7 @@ def makePlot2(db):
         if options['--output'] is None:
             options['--output'] = 'plot_all'
         data = merge_playtimes(app_list)
-        plot.plot(data, fname=options['--output'], plot_type=plot_type,
+        plot.plot(data, xlim=xlim, fname=options['--output'], plot_type=plot_type,
                   title='Steamplog')
         print '\'' + options['--output'] + '.png\''
 

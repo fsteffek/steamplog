@@ -7,6 +7,8 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.font_manager import FontProperties
+from matplotlib.dates import date2num
+from matplotlib.ticker import MultipleLocator
 
 
 def plot_2weeks(today, minutes, labels, fname=None, color=None):
@@ -74,7 +76,7 @@ def plot_n_days(ndays, today, minutes, labels, fname=None, color=None):
     plt.savefig(fname, dpi=72, bbox_extra_artists=(lgd,), bbox_inches='tight')
 
 
-def plot(data, legend=None, plot_type='bar', width=800, height=450,
+def plot(data, xlim=None, legend=None, plot_type='bar', width=800, height=450,
          title='Steamplog', fname=None):
     dpi = 96.  # <= here be dragons
     width = width / dpi  # turn pixels into some inch value
@@ -128,9 +130,18 @@ def plot(data, legend=None, plot_type='bar', width=800, height=450,
         Y = [y[1] for y in playtimes_with_zero(data)]
         ax.plot(X, Y, color=color_plot)
 
+    # Set the limits (x-axis)
+    if xlim:
+        plt.xlim((date2num(xlim[0]), date2num(xlim[1])))
+    # Show at least up to 60 minute (y-axis)
+    if ax.get_ylim()[1] - ax.get_ylim()[0] < 60.0:
+        plt.ylim((ax.get_ylim()[0], ax.get_ylim()[0] + 60.0))
+    # Label every hour (y-axis)
+    ax.yaxis.set_major_locator(MultipleLocator(60))
+
     # Rotate xlabels and format as date
     fig.autofmt_xdate(rotation=90)
-    # ax.xaxis.set_minorlocator(m # fix minor tick on week view
+
     # Set up the Grid
     ax.minorticks_on()
     ax.grid(b=True, which='major', color='#353539', axis='y')
