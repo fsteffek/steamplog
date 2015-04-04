@@ -26,7 +26,6 @@ other:
 """
 
 import sys
-import argparse
 import json
 import time
 import datetime
