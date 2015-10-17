@@ -7,19 +7,20 @@ import sys
 import utils
 
 
-class steamplog_db(object):
-    def __init__(self, host):
+class MySQLDB(object):
+    def __init__(self, host=''):
         self.conn = MySQLdb.connect(
-                host=host,
-                user="steam",
-                db="steam",
-                charset="utf8")
+                    host=host,
+                    user="steam",
+                    db="steam",
+                    charset="utf8")
         self.cursor = self.conn.cursor()
 
     def close(self):
         self.conn.close()
 
-    def configure(self):
+    # misc. operations
+    def create_tables(self):
         self.cursor.execute(
             'SELECT * FROM information_schema.tables '
             'WHERE table_name = "app_names" LIMIT 1'
@@ -46,47 +47,39 @@ class steamplog_db(object):
                 ')'
             )
 
-    def migrate(self):
+
+    # playtime table
+    def select_apps(self, unix_from, unix_to):  # returns distinct app_ids
         self.cursor.execute(
-                'SELECT DISTINCT time_of_record '
-                'FROM playtime_forever '
-                'ORDER BY time_of_record'
-            )
-        result = [row[0] for row in self.cursor.fetchall()]
-        total = float(len(result))
-        for i, row in enumerate(result):
-            print datetime.utcfromtimestamp(row)
-            utils.update_progress(float(i)/total)
-            self.cursor.execute(
-                'SELECT * FROM playtime_forever WHERE time_of_record=%s',
-                (row,))
-            result = self.cursor.fetchall()
-            data = [(x[0], x[1]) for x in result]
-            now = utils.round_datetime(datetime.utcfromtimestamp(row))
-            self.log_playtime_new(data, now)
+                'SELECT app_id, logged_at FROM playtime '
+                'WHERE %s <= logged_at AND logged_at <= %s GROUP BY app_id',
+                (unix_from, unix_to))
+        result = self.cursor.fetchall()  # returns [(app_id, logged_at)]
+        return [app[0] for app in result]
 
-    def update_appnames(self, app_list):
-        self.cursor.executemany(
-            'REPLACE INTO app_names'
-            '(app_id, name)'
-            'VALUES (%s, %s)', app_list
-            )
-        self.conn.commit()
+    def select_minutes(self, app_id, unix_from, unix_to):
+        self.cursor.execute(
+                'SELECT logged_at, MAX(minutes_played) as minutes_played '
+                'FROM playtime '
+                'WHERE app_id=%s AND logged_at < %s',
+                (app_id, unix_from))
+        #print 'app_id', app_id
+        result = self.cursor.fetchall()
+        if result[0][0] == None:
+            result = [(unix_from, 0)]
+        else:
+            result = [result[0]]
 
-    def log_playtime(self, owned_games):
-        """Insert playtime data into database"""
-        time_in_unix = int(time.time())  # timestamp for db
-        table = 'playtime_forever'
-        for game in owned_games['games']:
-            query = 'INSERT INTO ' + table
-            query += ' ( appid, minutes_played, time_of_record ) VALUES ( '
-            query += '%d, ' % game.get('appid', 0)
-            query += '%d, ' % game.get(table, 0)
-            query += '%d )' % time_in_unix
-            self.cursor.execute(query)
-        self.conn.commit()
+        # Get data in specified range
+        self.cursor.execute(
+                'SELECT logged_at, minutes_played '
+                'FROM playtime '
+                'WHERE app_id=%s AND %s < logged_at AND logged_at <= %s',
+                (app_id, unix_from, unix_to))
+        result.extend([(app[0], app[1]) for app in self.cursor.fetchall()])
+        return result
 
-    def log_playtime_new(self, data, log_date):
+    def log_playtime(self, data, log_date):
         """Insert playtime data into database"""
         # data == [(app_id, minutes_played)]
         # log_date == datetime.datetime
@@ -120,22 +113,23 @@ class steamplog_db(object):
                         (app_data[0], app_data[1], time_in_unix))
         self.conn.commit()
 
-    def app_ids_from_db(self):
-        """Get the app id for each game in database and return as list"""
-        query = 'SELECT DISTINCT appid FROM playtime_forever ORDER BY appid'
-        self.cursor.execute(query)
-        table = self.cursor.fetchall()  # returns a tuple of tuples
-        return [row[0] for row in table]
 
-    def fetch_playtimes_range(self, app_id, dt_from, dt_to):
-        unix_from = int((dt_from - datetime(1970, 1, 1)).total_seconds())
-        unix_to = int((dt_to - datetime(1970, 1, 1)).total_seconds())
+    # appnames table
+    def update_appnames_table(self, app_list):
+        self.cursor.executemany(
+            'REPLACE INTO app_names'
+            '(app_id, name)'
+            'VALUES (%s, %s)', app_list
+            )
+        self.conn.commit()
+
+    def select_appnames(self, app_id):
         self.cursor.execute(
-                'SELECT app_id, logged_at, minutes_played '
-                'FROM playtime '
-                'WHERE app_id=%s AND %s <= logged_at AND logged_at <= %s',
-                (app_id, unix_from, unix_to))
-        return self.cursor.fetchall()
+                'SELECT app_id, name FROM app_names WHERE app_id = %s',
+                (app_id))
+        name = self.cursor.fetchall()
+        return name[0][1]
+
 
     def fetch_app_ids_range(self, dt_from, dt_to):
         unix_from = int((dt_from - datetime(1970, 1, 1)).total_seconds())
