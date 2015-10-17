@@ -13,8 +13,10 @@ class Config(object):
         json_str = json.dumps(
             {'API key': 'YourKey',
              'Steam ID': 'YourID',
-             'MySQL host': 'localhost'},
-            sort_keys=True, indent=4, separators=(',', ': '))
+             'DB engine': 'SQLite',
+             'MySQL host': 'localhost',
+             'Date limit': 'DD-MM-YYYY'},
+            sort_keys=False, indent=4, separators=(',', ': '))
         with open(self.path, 'w') as a_file:
             a_file.write(json_str)
 

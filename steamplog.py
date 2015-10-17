@@ -6,6 +6,7 @@ usage:
   steamplog.py plot [bar | point | line] [-a | [<DATE_FROM>] [<DATE_TO>]]
                     [-lc] [-o FILE | -i] [-v]
   steamplog.py update-appnames
+  steamplog.py create-config
 
 plot options:
   -a, --all         plot every available playtime
@@ -47,6 +48,10 @@ def main(argv=None):
     application_name = argv[0]
 
     config = Config()
+    config.path = "config.json"
+    if options['create-config']:
+        config.create()
+        sys.exit(0)
     config.read('config.json')
 
     AM = AppMGR(config.DB_engine,
