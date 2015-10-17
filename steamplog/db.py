@@ -1,10 +1,9 @@
-import MySQLdb
 import time
 from datetime import datetime
 import sys
-
-
-import utils
+import steamplog.utils as utils
+import MySQLdb
+import sqlite3
 
 
 class MySQLDB(object):
@@ -130,18 +129,122 @@ class MySQLDB(object):
         name = self.cursor.fetchall()
         return name[0][1]
 
+##############################################################################
+class SQLiteDB(object):
+    def __init__(self):
+        self.db = sqlite3.connect(
+            'steamplog.db',
+            #detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES,
+            )
+        self.cursor = self.db.cursor() 
 
-    def fetch_app_ids_range(self, dt_from, dt_to):
-        unix_from = int((dt_from - datetime(1970, 1, 1)).total_seconds())
-        unix_to = int((dt_to - datetime(1970, 1, 1)).total_seconds())
+    def close(self):
+        self.db.close()
+
+    # misc. operations:
+    def create_tables(self):
+        self.db.execute(
+            'CREATE TABLE IF NOT EXISTS playtime\n'
+            '    (\n'
+            '        app_id INTEGER NOT NULL,\n'
+            '        logged_at INTEGER NOT NULL,\n'
+            '        minutes_played INTEGER NOT NULL,\n'
+            '        PRIMARY KEY (app_id, logged_at)\n'
+            '    )\n'
+            )
+        self.db.execute(
+            'CREATE TABLE IF NOT EXISTS app_names\n'
+            '    (\n'
+            '        app_id INTEGER PRIMARY KEY,\n'
+            '        name TEXT\n'
+            '    )\n'
+            )
+        self.db.commit()
+
+    def tidy(self):
+        self.cursor.execute('DELETE FROM playtime WHERE app_id = 0')
+
+    
+    # playtime table
+    def select_apps(self, unix_from, unix_to):
         self.cursor.execute(
                 'SELECT app_id, logged_at FROM playtime '
-                'WHERE %s <= logged_at AND logged_at <= %s GROUP BY app_id',
+                'WHERE (?) <= logged_at AND logged_at <= (?) GROUP BY app_id',
                 (unix_from, unix_to))
-        return self.cursor.fetchall()
+        result = self.cursor.fetchall()
+        return [app[0] for app in result]
 
-    def get_app_name(self, app_id):
+    def select_minutes(self, app_id, unix_from, unix_to):
         self.cursor.execute(
-                'SELECT app_id, name FROM app_names WHERE app_id = %s',
-                (app_id))
-        return self.cursor.fetchall()
+                'SELECT logged_at, max(minutes_played) '
+                'FROM playtime '
+                'WHERE app_id=(?) AND logged_at < (?)',
+                (app_id, unix_from))
+        #print 'app_id', app_id
+        result = self.cursor.fetchall()
+        if result[0][0] == None:
+            result = [(unix_from, 0)]
+        else:
+            result = [result[0]]
+
+        # Get data in specified range
+        self.cursor.execute(
+                'SELECT logged_at, minutes_played '
+                'FROM playtime '
+                'WHERE app_id=(?) AND (?) < logged_at AND logged_at <= (?)',
+                (app_id, unix_from, unix_to))
+        result.extend([(app[0], app[1]) for app in self.cursor.fetchall()])
+        return result
+
+    def log_playtime(self, data, unix_timestamp):
+        for app_data in data:
+            # Update old minutes_played ...
+            self.cursor.execute(
+                    'SELECT app_id, logged_at '
+                    'FROM playtime '
+                    'WHERE app_id=(?) AND logged_at=(?)',
+                    (app_data[0], unix_timestamp))
+            if self.cursor.fetchall():
+                self.cursor.execute(
+                    'UPDATE playtime '
+                    'SET minutes_played=(?) '
+                    'WHERE app_id=(?) AND logged_at=(?)',
+                   (app_data[1], app_data[0], unix_timestamp))
+                continue
+            # ... or insert new log
+            self.cursor.execute(
+                    'SELECT app_id, minutes_played, logged_at '
+                    'FROM playtime '
+                    'WHERE app_id=(?) AND minutes_played=(?)',
+                    (app_data[0], app_data[1]))
+            if not self.cursor.fetchall():
+                self.cursor.execute(
+                        'INSERT INTO playtime '
+                        '(app_id, minutes_played, logged_at) '
+                        'VALUES (?,?,?)',
+                        (app_data[0], app_data[1], unix_timestamp))
+            self.db.commit()
+
+    def select_timestamps(self, app_id):
+        pass
+
+    # appnames table
+    def update_appnames_table(self, applist):
+        self.db.executemany(
+            'REPLACE INTO app_names'
+            '(app_id, name)'
+            'VALUES (?, ?)', applist
+            )
+        self.db.commit()
+
+    def select_appnames(self, app_id):
+        self.cursor.execute(
+                'SELECT app_id, name FROM app_names WHERE app_id = (?)',
+                (app_id,))
+        name = self.cursor.fetchall()
+        if name == []:
+            print 'something bad happened'
+            print app_id
+            return 'uh oh'
+        else:
+            return name[0][1]
