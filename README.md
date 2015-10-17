@@ -22,6 +22,35 @@ This creates the file `config.json`. This is where you should add your API key a
 
 Run with option `-h` to see all available options.
 
+```
+$ ./steamplog.py -h
+steamplog - log and plot your steam gaming time
+
+usage:
+  steamplog.py log
+  steamplog.py plot [bar | point | line] [-a | [<DATE_FROM>] [<DATE_TO>]]
+                    [-lc] [-o FILE | -i] [-v]
+  steamplog.py update-appnames
+  steamplog.py create-config
+
+plot options:
+  -a, --all         plot every available playtime
+  [<DATE_FROM>]     include every playtime from this date (format: YYYY-MM-DD)
+                    [default: last 14 days]
+  [<DATE_TO>]       include every playtime from this date (format: YYYY-MM-DD)
+                    [default: today]
+  -c, --color       top 10 games have different colors
+  -l, --legend      include a legend
+  -o FILENAME, --output FILENAME
+                    FILENAME of the output image without extension
+  -i, --individual  plot each game in a new image
+
+other:
+  -v, --verbose  be verbose
+  -h, --help     show this help
+
+```
+
 ### Automating
 To automatically run this script every day at 5 in the morning, edit your cronfile.
 ```bash
