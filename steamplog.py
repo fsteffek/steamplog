@@ -43,14 +43,7 @@ def main(argv=None):
     global options
     global application_name
     options = docopt(__doc__, argv=argv[1:])
-    print options
-    #sys.exit(0)
     application_name = argv[0]
-    #parser = makeParser()
-    #options = parser.parse_args(argv[1:])
-    #if options.reset_config:
-    #    reset_config()
-    #    sys.exit(0)
 
     (api_key, steam_id, db_host) = read_config()
 
@@ -64,7 +57,6 @@ def main(argv=None):
         sys.exit(0)
 
     if options['plot']:
-        #db.migrate()
         print 'Plotting'
         makePlot2(db)
         db.close()
@@ -77,19 +69,11 @@ def main(argv=None):
         db.close()
         sys.exit(0)
 
-    #if options.pretty_print:
-    #    print json.dumps(owned_games, indent=4, separators=(',', ': '))
-    #    sys.exit(0)
-    #if options.print_only:
-    #    print owned_games
-    #    sys.exit(0)
-
     if options['log']:
         data = [(x['appid'], x['playtime_forever']) for x in
                 owned_games['games']]
         now = utils.round_datetime(datetime.datetime.utcnow())
         db.log_playtime_new(data, now)
-        #db.log_playtime(owned_games)
         time.sleep(10)
 
     # Disconnect from database
@@ -156,8 +140,10 @@ def makePlot(db):
         y_name.append(app.name)
     plot.plot_2weeks(today, x_all, y_name, options['-f'])
 
+
 def parse_date(date):
     return datetime.datetime.strptime(date, "%Y-%m-%d")
+
 
 def makePlot2(db):
     import copy
@@ -216,7 +202,6 @@ def makePlot2(db):
                 one_data.append((datetime.datetime.utcfromtimestamp(d),
                                  m, offset[d]))
                 offset[d] = int(offset[d] + m)
-                #print offset
             data.append(copy.copy(one_data))
             one_data[:] = []
         if options['--legend']:
@@ -246,13 +231,15 @@ def makePlot2(db):
             print '\'plots/' + app.name + '.png\''
             app_data.clear()
             data[:] = []
-    else: # plot all in one plot
+    else:  # plot all in one plot
         if options['--output'] is None:
             options['--output'] = 'plot_all'
         data = merge_playtimes(app_list)
-        plot.plot(data, xlim=xlim, fname=options['--output'], plot_type=plot_type,
+        plot.plot(data, xlim=xlim, fname=options['--output'],
+                  plot_type=plot_type,
                   title='Steamplog')
         print '\'' + options['--output'] + '.png\''
+
 
 def merge_playtimes(app_list):
     playtime = {}
