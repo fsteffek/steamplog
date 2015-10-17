@@ -56,7 +56,7 @@ def download_applist():
 
 
 def datetime2unix(date_time):
-    result = int((date_time - datetime.datetime(1970, 1, 1)).total_seconds()) 
+    result = int((date_time - datetime.datetime(1970, 1, 1)).total_seconds()
     return result
 
 def unix2datetime(unix_timestamp):

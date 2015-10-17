@@ -1,9 +1,11 @@
 import time
 from datetime import datetime
 import sys
-import steamplog.utils as utils
+
+
 import MySQLdb
 import sqlite3
+import steamplog.utils as utils
 
 
 class MySQLDB(object):
@@ -46,7 +48,6 @@ class MySQLDB(object):
                 ')'
             )
 
-
     # playtime table
     def select_apps(self, unix_from, unix_to):  # returns distinct app_ids
         self.cursor.execute(
@@ -62,7 +63,6 @@ class MySQLDB(object):
                 'FROM playtime '
                 'WHERE app_id=%s AND logged_at < %s',
                 (app_id, unix_from))
-        #print 'app_id', app_id
         result = self.cursor.fetchall()
         if result[0][0] == None:
             result = [(unix_from, 0)]
@@ -112,7 +112,6 @@ class MySQLDB(object):
                         (app_data[0], app_data[1], time_in_unix))
         self.conn.commit()
 
-
     # appnames table
     def update_appnames_table(self, app_list):
         self.cursor.executemany(
@@ -128,15 +127,15 @@ class MySQLDB(object):
                 (app_id))
         name = self.cursor.fetchall()
         return name[0][1]
-
 ##############################################################################
+
+
 class SQLiteDB(object):
     def __init__(self):
         self.db = sqlite3.connect(
             'steamplog.db',
-            #detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES,
             )
-        self.cursor = self.db.cursor() 
+        self.cursor = self.db.cursor()
 
     def close(self):
         self.db.close()
@@ -164,7 +163,6 @@ class SQLiteDB(object):
     def tidy(self):
         self.cursor.execute('DELETE FROM playtime WHERE app_id = 0')
 
-    
     # playtime table
     def select_apps(self, unix_from, unix_to):
         self.cursor.execute(
@@ -180,7 +178,6 @@ class SQLiteDB(object):
                 'FROM playtime '
                 'WHERE app_id=(?) AND logged_at < (?)',
                 (app_id, unix_from))
-        #print 'app_id', app_id
         result = self.cursor.fetchall()
         if result[0][0] == None:
             result = [(unix_from, 0)]
@@ -209,7 +206,7 @@ class SQLiteDB(object):
                     'UPDATE playtime '
                     'SET minutes_played=(?) '
                     'WHERE app_id=(?) AND logged_at=(?)',
-                   (app_data[1], app_data[0], unix_timestamp))
+                    (app_data[1], app_data[0], unix_timestamp))
                 continue
             # ... or insert new log
             self.cursor.execute(

@@ -2,6 +2,7 @@ from datetime import datetime
 import steamplog.appdb as appdb
 import steamplog.utils as utils
 
+
 class AppMGR(object):
     def __init__(self, engine, host=None, date_limit=None):
         if engine == 'MySQL':

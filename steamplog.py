@@ -83,7 +83,6 @@ def main(argv=None):
         if options['--verbose']:
             print 'Plotting...'
         AM.games_played = AM.find_games_played()
-        #print AM.games_played
         AM.process_games_played()
         AM.sort_most_played()
         makePlot(AM)
@@ -188,7 +187,6 @@ def merge_playtimes(app_list):
     playtime = {}
     for app in app_list:
         for d, m in zip(app.date, app.playtime):
-            #d = utils.datetime2unix(d)
             playtime[d] = playtime[d] + m if d in playtime else m
     return [(utils.unix2datetime(d), playtime[d]) for d in playtime]
 

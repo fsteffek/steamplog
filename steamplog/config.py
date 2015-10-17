@@ -1,5 +1,6 @@
 import json
 
+
 class Config(object):
 
     def __init__(self):
@@ -32,4 +33,3 @@ class Config(object):
         self.DB_engine = json_dict['DB engine']
         self.SQL_host = json_dict['MySQL host']
         self.date_limit = json_dict['Date limit']
-

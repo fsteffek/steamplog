@@ -220,7 +220,8 @@ def main():
         for app in app_list:
             for date, minutes in zip(app.date, app.last_day):
                 date = app_data[0]
-                offset[date] = offset[date] + app_data[1] if date in offset else 0
+                offset[date] = offset[date] \
+                        + app_data[1] if date in offset else 0
             
     print data.__class__
     for x in data:
@@ -229,10 +230,10 @@ def main():
         print type(x) is list
     print 'bar'
     plot(data, fname='unittest_bar', plot_type='bar')
-    #print 'point'
-    #plot(data, fname='unittest_point', plot_type='point')
-    #print 'line'
-    #plot(data, fname='unittest_line', plot_type='line')
+    # print 'point'
+    # plot(data, fname='unittest_point', plot_type='point')
+    # print 'line'
+    # plot(data, fname='unittest_line', plot_type='line')
 
 if __name__ == "__main__":
     main()
