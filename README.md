@@ -1,7 +1,7 @@
 SteamPlog
 =============
 
-![Steamplog Q1-2015](https://www.dropbox.com/s/3cbpumi078l6sie/4_56662202161037332.png)
+![Steamplog Q1-2015](https://photos-5.dropbox.com/t/2/AAAPogR-i9_c0QAt3mo0fWJZP7XAu0Md-blUTC8f6S67hQ/12/30030600/png/32x32/1/1445097600/0/2/4_56662202161037332.png/CIj2qA4gASACIAMgBSAHKAEoAigH/DX2qWn4daAbcSErhP6814FFP3pkuwpcP-GMFZ4yJXik?size=1024x768&size_mode=2)
 
 This script logs and plots your game playtime for your steam games.
 
