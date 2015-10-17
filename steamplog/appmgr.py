@@ -49,7 +49,7 @@ class AppMGR(object):
     def process_games_played(self):
         '''Calculate playtime for each day and add it to list'''
         for game in self.games_played:
-            app = Application()
+            app = App()
             app.app_id = game
             app.name = self.db.select_appnames(app.app_id)
             previous_day = 0

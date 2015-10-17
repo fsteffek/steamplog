@@ -109,8 +109,9 @@ def plot(data, xlim=None, legend=None, plot_type='bar', width=800, height=450,
     # Plot as bar, points or line
     if plot_type == 'bar':
         if type(data[0]) is list:
-            color_ = ['#89adba', '#b4da45', '#b84d1f', '#57739d',
-                      '#b7b395', '#c98d33']  # '#89adba', '#b7b395']
+            color_ = ['#89adba', '#b4da45', '#b84d1f', '#AA0114',
+                      '#b7b395', '#c98d33', '#BD2031', '#663300',
+                      '#663399', '#FFBAD2', '#57739d']  # '#89adba', '#b7b395']
             if len(data) < len(color_):
                 color_ = color_[:len(data)]
             for messung, color4plot in \
@@ -195,3 +196,43 @@ def playtimes_with_zero(playtimes, interval=timedelta(days=1), fillvalue=0):
                 dt_from = dt_from + interval
         else:
             yield pt
+
+
+def main():
+    r = matplotlib.mlab.csv2rec('steam_playtime_2weeks.csv')
+
+    data = []
+    dates = {}
+    for row in r:
+        if row[0] in dates:
+            dates[row[0]] = dates[row[0]] + row[1]
+        else:
+            dates[row[0]] = row[1]
+    for key in dates:
+        mins = int(dates[key])
+        data.append((dt.utcfromtimestamp(key), mins))
+    data.sort()
+    data = data[280:]
+    data = [data, data]
+    app_list = data
+    if type(data[0]) is list:
+        offset = {}
+        for app in app_list:
+            for date, minutes in zip(app.date, app.last_day):
+                date = app_data[0]
+                offset[date] = offset[date] + app_data[1] if date in offset else 0
+            
+    print data.__class__
+    for x in data:
+        print x
+        print type(x)
+        print type(x) is list
+    print 'bar'
+    plot(data, fname='unittest_bar', plot_type='bar')
+    #print 'point'
+    #plot(data, fname='unittest_point', plot_type='point')
+    #print 'line'
+    #plot(data, fname='unittest_line', plot_type='line')
+
+if __name__ == "__main__":
+    main()

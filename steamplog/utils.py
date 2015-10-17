@@ -38,7 +38,7 @@ def get_owned_games(api_key='', steam_id=''):
     return response['response']
 
 
-def get_app_list():
+def download_applist():
     URL = 'http://api.steampowered.com/ISteamApps/GetAppList/v2'
     try:
         request = urllib2.urlopen(URL)
@@ -54,6 +54,13 @@ def get_app_list():
     return [(app['appid'], app['name'])
             for app in json_dict['applist']['apps']]
 
+
+def datetime2unix(date_time):
+    result = int((date_time - datetime.datetime(1970, 1, 1)).total_seconds()) 
+    return result
+
+def unix2datetime(unix_timestamp):
+    return datetime.datetime.utcfromtimestamp(unix_timestamp)
 
 # update_progress() : Displays or updates a console progress bar
 ## Accepts a float between 0 and 1. Any int will be converted to a float.
