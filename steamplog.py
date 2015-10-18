@@ -69,7 +69,6 @@ def main(argv=None):
         sys.exit(0)
 
     if options['plot']:
-        # db.migrate()
         # Set options
         if options['<DATE_TO>'] == None:
             AM.set_to(utils.datetime2unix(datetime.datetime.now()))
@@ -94,8 +93,6 @@ def main(argv=None):
         AM.db.close()
         sys.exit(0)
 
-    # AM.update_names()
-
     owned_games = utils.get_owned_games(config.API_key, config.Steam_ID)
 
     if 'games' not in owned_games:
@@ -108,7 +105,6 @@ def main(argv=None):
                 owned_games['games']]
         now = utils.round_datetime(datetime.datetime.utcnow())
         AM.db.log_playtime(data, utils.datetime2unix(now))
-        # db.log_playtime(owned_games)
         time.sleep(10)
 
     # Disconnect from database
