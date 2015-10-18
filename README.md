@@ -12,7 +12,7 @@ Note: steamplog is not endorsed, sponsored, affiliated with or otherwise authori
 #### Requirements
 * [Steam API Key](http://steamcommunity.com/dev) ([Powered by Steam](http://steampowered.com))
 * Python 2.7.6+ (lower versions untested)
-* either `sqlite3` or `python-mysqldb`
+* Either `sqlite3` or `python-mysqldb`
 * `python-matplotlib`
 
 ### Usage
@@ -52,12 +52,12 @@ other:
 ```
 
 ### Automating
-To automatically run this script every day at 5 in the morning, edit your cronfile.
+To automatically run this script every day at 5 in the morning, edit your crontab.
 ```bash
 $ crontab -e
 ```
 Insert the following line at the end.
 ```
-0 5 * * * {path-to-steamplog.py}/steamplog.py --save
+0 5 * * * {path-to-steamplog.py}/steamplog.py log
 ```
 
