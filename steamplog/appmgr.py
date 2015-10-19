@@ -67,6 +67,15 @@ class AppMGR(object):
             if app.playtime != []:
                 self.applist.append(app)
 
+    def get_max_minutes(self):
+        result = self.db.select_max_minutes()
+        for game in result:
+            app = App()
+            app.app_id = game[0]
+            app.name = self.db.select_appnames(app.app_id)
+            app.playtime = game[1]
+            self.applist.append(app)
+
 
 class App(object):
     def __init__(self):

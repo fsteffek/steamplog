@@ -222,8 +222,21 @@ class SQLiteDB(object):
                         (app_data[0], app_data[1], unix_timestamp))
             self.db.commit()
 
-    def select_timestamps(self, app_id):
-        pass
+    def select_max_minutes(self):
+        self.cursor.execute(
+                'SELECT app_id '
+                'FROM playtime '
+                'GROUP BY app_id ORDER by minutes_played DESC')
+        result = self.cursor.fetchall()
+        app_list = ()
+        for app_id in result:
+            self.cursor.execute(
+                    'SELECT app_id, MAX(minutes_played) '
+                    'FROM playtime '
+                    ' WHERE app_id = (?)', app_id)
+            result = self.cursor.fetchall()
+            app_list = app_list + ((result[0]),)
+        return app_list
 
     # appnames table
     def update_appnames_table(self, applist):
