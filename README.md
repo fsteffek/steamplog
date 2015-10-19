@@ -1,13 +1,13 @@
 SteamPlog
 =============
 
+SteamPlog logs and plots your in-game time for your steam games.
+
+Note: SteamPlog is not endorsed, sponsored, affiliated with or otherwise authorized by Valve Corporation.
+
 ![Steamplog Q1-2015](https://photos-5.dropbox.com/t/2/AAAPogR-i9_c0QAt3mo0fWJZP7XAu0Md-blUTC8f6S67hQ/12/30030600/png/32x32/1/1445097600/0/2/4_56662202161037332.png/CIj2qA4gASACIAMgBSAHKAEoAigH/DX2qWn4daAbcSErhP6814FFP3pkuwpcP-GMFZ4yJXik?size=1024x768&size_mode=2)
 
-This script logs and plots your game playtime for your steam games.
-
-Note: steamplog is not endorsed, sponsored, affiliated with or otherwise authorized by Valve Corporation.
-
-### Setup
+### Getting Started
 
 #### Requirements
 * [Steam API Key](http://steamcommunity.com/dev) ([Powered by Steam](http://steampowered.com))
@@ -15,10 +15,13 @@ Note: steamplog is not endorsed, sponsored, affiliated with or otherwise authori
 * Either `sqlite3` or `python-mysqldb`
 * `python-matplotlib`
 
-### Usage
+#### First time setup
 
-After cloning this repo you should run `steamplog.py create-config`.
-This creates the file `config.json`. This is where you should add your API key and Steam ID.
+Run 
+
+```steamplog.py create-config```
+
+to (obviously) create your config file. This command creates the file `config.json`. You should add your API key and Steam ID to this file.
 
 Run with option `-h` to see all available options.
 
@@ -52,12 +55,8 @@ other:
 ```
 
 ### Automating
-To automatically run this script every day at 5 in the morning, edit your crontab.
-```bash
-$ crontab -e
-```
-Insert the following line at the end.
-```
-0 5 * * * {path-to-steamplog.py}/steamplog.py log
-```
+#### On Linux
+Edit your [crontab](https://github.com/fsteffek/steamplog/wiki/Automation-%28set-and-forget%29)
+#### On Windows
+Use the task sheduler
 
