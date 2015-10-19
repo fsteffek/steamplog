@@ -127,7 +127,7 @@ def makePlot(AM):
     xlim = (AM.get_dt_from(), AM.get_dt_to())
 
     if not AM.applist:
-        info = application_name + ': INFO: You have not played between ' + \
+        info = application_name + ': INFO: No data found between ' + \
             AM.get_dt_from().strftime("%Y-%m-%d") + ' and ' + \
             AM.get_dt_to().strftime("%Y-%m-%d")
         print >> sys.stderr, info
