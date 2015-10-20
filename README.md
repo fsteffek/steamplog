@@ -18,16 +18,16 @@ Note: SteamPlog is not endorsed, sponsored, affiliated with or otherwise authori
 #### First time setup
 
 ```bash
-$ ./steamplaytime.py create-config    # afterwards edit your config.json
-$ ./steamplaytime.py update-appnames  # run when steam releases new games
+$ ./steamplog.py create-config      # afterwards edit your config.json
+$ ./steamplog.py update-appnames    # run when steam releases new games
 ```
 
 You should add your API key and Steam ID to `config.json`. After that you may run the following commands:
 
 ```bash
-$ ./steamplaytime.py log              # run it once a day
-$ ./steamplaytime.py plot             # run whenever you want
-$ ./steamplaytime.py plot -lc -o 2015-Q3 2015-07-01 2015-09-30
+$ ./steamplog.py log                # run it once a day
+$ ./steamplog.py plot               # run whenever you want
+$ ./steamplog.py plot -lc -o 2015-Q3 2015-07-01 2015-09-30
 ```
 
 Run with option `-h` to see all available options.
