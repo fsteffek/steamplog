@@ -42,6 +42,7 @@ usage:
                     [-lc] [-o FILE | -i] [-v]
   steamplog.py update-appnames
   steamplog.py create-config
+  steamplog.py stats [--full]
 
 plot options:
   -a, --all         plot every available playtime
@@ -54,6 +55,9 @@ plot options:
   -o FILENAME, --output FILENAME
                     FILENAME of the output image without extension
   -i, --individual  plot each game in a new image
+
+stats options:
+  --full            print every game
 
 other:
   -v, --verbose  be verbose

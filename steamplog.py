@@ -7,7 +7,7 @@ usage:
                     [-lc] [-o FILE | -i] [-v]
   steamplog.py update-appnames
   steamplog.py create-config
-  steamplog.py stats
+  steamplog.py stats [--full]
 
 plot options:
   -a, --all         plot every available playtime
@@ -20,6 +20,9 @@ plot options:
   -o FILENAME, --output FILENAME
                     FILENAME of the output image without extension
   -i, --individual  plot each game in a new image
+
+stats options:
+  --full            print every game
 
 other:
   -v, --verbose  be verbose
@@ -74,10 +77,15 @@ def main(argv=None):
         total_sum = 0
         for app in AM.applist:
             total_sum = total_sum + app.playtime
-        print 'Steam total playtime:', "%0.2f" % (total_sum/60.0), 'hours'
+        print 'Steam total playtime:', "%0.2f" % (total_sum/60.0), 'hours', \
+              "(%0.2f days)" % (total_sum/60.0/24.0)
         print ''
-        for game in AM.applist[:10]:
-            print "%0.2f" % (game.playtime/60.0), 'hours','\t', game.name
+        if options['--full']:
+            for game in AM.applist:
+                print "%0.2f" % (game.playtime/60.0), 'hours','\t', game.name
+        else:
+            for game in AM.applist[:10]:
+                print "%0.2f" % (game.playtime/60.0), 'hours','\t', game.name
 
     if options['plot']:
         # Set options
