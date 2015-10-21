@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import steamplog.appdb as appdb
 import steamplog.utils as utils
 
@@ -15,13 +15,17 @@ class AppMGR(object):
         self.date_limit = None
 
     def set_from(self, timestamp):
-        self.unix_timestamp_from = timestamp
+        dt_from = utils.unix2datetime(timestamp)
+        self.unix_timestamp_from = utils.datetime2unix(dt_from - \
+                timedelta(hours=dt_from.hour))
 
     def get_from(self):
         return self.unix_timestamp_from
 
     def set_to(self, timestamp):
-        self.unix_timestamp_to = timestamp
+        dt_to = utils.unix2datetime(timestamp)
+        self.unix_timestamp_to = utils.datetime2unix(dt_to + \
+                timedelta(hours=24 - dt_to.hour))
 
     def get_to(self):
         return self.unix_timestamp_to
