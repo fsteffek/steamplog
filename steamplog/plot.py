@@ -76,7 +76,7 @@ def plot(data, xlim=None, legend=None, plot_type='bar', width=800, height=450,
     ax.yaxis.set_major_locator(MultipleLocator(60))
 
     # Rotate xlabels and format as date
-    fig.autofmt_xdate(rotation=90)
+    fig.autofmt_xdate(rotation=45)
 
     # Set up the Grid
     ax.minorticks_on()
@@ -91,7 +91,10 @@ def plot(data, xlim=None, legend=None, plot_type='bar', width=800, height=450,
     for label in ax.get_xticklabels():
         label.set_fontproperties(font0)
         label.set_color(color_text)
-        label.set_horizontalalignment('left')
+        label.set_horizontalalignment('center')
+    # Remove last label hack
+    last_label = ax.get_xticklabels()[-1]
+    last_label.set_visible(False)
     for label in ax.get_yticklabels():
         label.set_fontproperties(font0)
         label.set_color(color_text)
