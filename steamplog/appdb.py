@@ -180,7 +180,7 @@ class SQLiteDB(object):
                 (app_id, unix_from))
         result = self.cursor.fetchall()
         if result[0][0] == None:
-            result = [(unix_from, 0)]
+            result = [(unix_from-86400, 0)]
         else:
             result = [result[0]]
 
@@ -190,7 +190,7 @@ class SQLiteDB(object):
                 'FROM playtime '
                 'WHERE app_id=(?) AND (?) < logged_at AND logged_at <= (?)',
                 (app_id, unix_from, unix_to))
-        result.extend([(app[0], app[1]) for app in self.cursor.fetchall()])
+        result.extend([(app[0]-86400, app[1]) for app in self.cursor.fetchall()])
         return result
 
     def log_playtime(self, data, unix_timestamp):
