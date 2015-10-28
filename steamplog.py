@@ -86,6 +86,7 @@ def main(argv=None):
         else:
             for game in AM.applist[:10]:
                 print "%0.2f" % (game.playtime/60.0), 'hours','\t', game.name
+        sys.exit(0);
 
     if options['plot']:
         # Set options
