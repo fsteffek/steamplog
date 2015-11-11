@@ -1,8 +1,6 @@
 from datetime import timedelta
 import itertools
 
-import matplotlib
-matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.font_manager import FontProperties
 from matplotlib.dates import date2num
