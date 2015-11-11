@@ -6,7 +6,6 @@ usage:
   steamplog.py plot [bar | point | line] [-a | [<DATE_FROM>] [<DATE_TO>]]
                     [-lc] [-o FILE | -i] [-v]
   steamplog.py update-appnames
-  steamplog.py create-config
   steamplog.py stats [--full]
 
 plot options:
@@ -51,12 +50,9 @@ def main(argv=None):
     options = docopt(__doc__, argv=argv[1:])
     application_name = argv[0]
 
+    # Load API Key and Steam UserID
     config = Config()
-    config.path = "config.json"
-    if options['create-config']:
-        config.create()
-        sys.exit(0)
-    config.read('config.json')
+    config.load()
 
     AM = AppMGR(config.DB_engine,
                 date_limit=config.date_limit)
