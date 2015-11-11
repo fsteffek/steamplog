@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 """steamplog - log and plot your steam gaming time
 
 usage:
