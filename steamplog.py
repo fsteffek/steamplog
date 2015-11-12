@@ -37,7 +37,7 @@ from docopt import docopt
 
 
 from steamplog.config import Config
-from steamplog.appmgr import AppMGR, App
+from steamplog.gamemgr import AppMGR, App
 import steamplog.plot as plot
 import steamplog.utils as utils
 
