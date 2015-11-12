@@ -29,6 +29,7 @@ other:
 
 """
 
+from __future__ import print_function
 import sys
 import json
 import time
@@ -58,12 +59,12 @@ def main(argv=None):
                 date_limit=config.date_limit)
 
     if options['--verbose']:
-        print 'Engine:', config.DB_engine
+        print('Engine:', config.DB_engine)
     AM.db.create_tables()
 
     if options['update-appnames']:
-        print >> sys.stderr, application_name + \
-                ': INFO: This might take a while'
+        print(application_name + \
+                ': INFO: This might take a while', file=sys.stderr)
         AM.update_names()
         AM.db.close()
         sys.exit(0)
@@ -73,15 +74,15 @@ def main(argv=None):
         total_sum = 0
         for app in AM.applist:
             total_sum = total_sum + app.playtime
-        print 'Steam total playtime:', "%0.2f" % (total_sum/60.0), 'hours', \
-              "(%0.2f days)" % (total_sum/60.0/24.0)
-        print ''
+        print('Steam total playtime:', "%0.2f" % (total_sum/60.0), 'hours', \
+              "(%0.2f days)" % (total_sum/60.0/24.0))
+        print('')
         if options['--full']:
             for game in AM.applist:
-                print "%0.2f" % (game.playtime/60.0), 'hours','\t', game.name
+                print("%0.2f" % (game.playtime/60.0), 'hours','\t', game.name)
         else:
             for game in AM.applist[:10]:
-                print "%0.2f" % (game.playtime/60.0), 'hours','\t', game.name
+                print("%0.2f" % (game.playtime/60.0), 'hours','\t', game.name)
         sys.exit(0);
 
     if options['plot']:
@@ -101,7 +102,7 @@ def main(argv=None):
             AM.set_from(utils.datetime2unix(datetime.datetime(2014, 6, 1)))
 
         if options['--verbose']:
-            print 'Plotting...'
+            print('Plotting...')
         AM.games_played = AM.find_games_played()
         AM.process_games_played()
         AM.sort_most_played()
@@ -112,7 +113,7 @@ def main(argv=None):
     owned_games = utils.get_owned_games(config.API_key, config.Steam_ID)
 
     if 'games' not in owned_games:
-        print >> sys.stderr, application_name + ': ERROR: No games found'
+        print(application_name + ': ERROR: No games found', file=sys.stderr)
         AM.db.close()
         sys.exit(0)
 
@@ -146,7 +147,7 @@ def makePlot(AM):
         info = application_name + ': INFO: No data found between ' + \
             AM.get_dt_from().strftime("%Y-%m-%d") + ' and ' + \
             AM.get_dt_to().strftime("%Y-%m-%d")
-        print >> sys.stderr, info
+        print(info, file=sys.stderr)
         sys.exit(0)
 
     # 3 different plotting options
@@ -173,7 +174,7 @@ def makePlot(AM):
         plot.plot(data, xlim=xlim, fname=options['--output'], plot_type='bar',
                   legend=legend,
                   title='Steamplog ('+options['--output']+')')
-        print '\'' + options['--output'] + '.png\''
+        print('\'' + options['--output'] + '.png\'')
     elif options['--individual']:
         for app in AM.applist:
             app_data = {}
@@ -188,7 +189,7 @@ def makePlot(AM):
             data.sort()
             plot.plot(data, xlim=xlim, fname='plots/'+app.name,
                       plot_type=plot_type, title=app.name)
-            print '\'plots/' + app.name + '.png\''
+            print('\'plots/' + app.name + '.png\'')
             app_data.clear()
             data[:] = []
     else:  # plot all in one plot
@@ -197,7 +198,7 @@ def makePlot(AM):
         data = merge_playtimes(AM.applist)
         plot.plot(data, xlim=xlim, fname=options['--output'],
                   plot_type=plot_type, title='Steamplog')
-        print '\'' + options['--output'] + '.png\''
+        print('\'' + options['--output'] + '.png\'')
 
 
 def merge_playtimes(app_list):
