@@ -3,11 +3,12 @@ from datetime import datetime
 import sys
 
 
-import MySQLdb
+#import MySQLdb
 import sqlite3
 import steamplog.utils as utils
 
 
+'''
 class MySQLDB(object):
     def __init__(self, host=''):
         self.conn = MySQLdb.connect(
@@ -128,7 +129,7 @@ class MySQLDB(object):
         name = self.cursor.fetchall()
         return name[0][1]
 ##############################################################################
-
+'''
 
 class SQLiteDB(object):
     def __init__(self):
