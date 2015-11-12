@@ -1,15 +1,15 @@
 from datetime import datetime, timedelta
-import steamplog.appdb as appdb
+import steamplog.database as database
 import steamplog.utils as utils
 
 
 class AppMGR(object):
     def __init__(self, engine, host=None, date_limit=None):
         if engine == 'MySQL':
-            self.db = appdb.MySQLDB('10.0.0.3')
+            self.db = database.MySQLDB('10.0.0.3')
             self.db_host = host
         elif engine == 'SQLite':
-            self.db = appdb.SQLiteDB()
+            self.db = database.SQLiteDB()
         self.applist = []
         self.games_played = []
         self.date_limit = None
