@@ -3,13 +3,12 @@
 
 usage:
   steamplog.py log [<DATE>]
-  steamplog.py plot [bar | point | line] [-a | [<DATE_FROM>] [<DATE_TO>]]
-                    [-lc] [-o FILE | -i] [-v]
+  steamplog.py plot [bar | point | line] [<DATE_FROM> [<DATE_TO>]]
+                    [-lc] [-o FILE] [-v]
   steamplog.py update-appnames
   steamplog.py stats [--full]
 
 plot options:
-  -a, --all         plot every available playtime
   [<DATE_FROM>]     include every playtime from this date (format: YYYY-MM-DD)
                     [default: last 14 days]
   [<DATE_TO>]       include every playtime from this date (format: YYYY-MM-DD)
@@ -18,7 +17,6 @@ plot options:
   -l, --legend      include a legend
   -o FILENAME, --output FILENAME
                     FILENAME of the output image without extension
-  -i, --individual  plot each game in a new image
 
 stats options:
   --full            print every game
@@ -139,12 +137,6 @@ def parse_date(date):
 
 def makePlot(AM):
     import copy
-    # Set plot type
-    plot_type = 'bar'
-    if options['point']:
-        plot_type = 'point'
-    if options['line']:
-        plot_type = 'line'
     # Set x-limits
     xlim = (AM.get_dt_from(), AM.get_dt_to())
 
@@ -155,7 +147,6 @@ def makePlot(AM):
         print(info, file=sys.stderr)
         sys.exit(0)
 
-    # 3 different plotting options
     if options['--color']:  # different color apps
         data = []
         offset = {}
@@ -179,30 +170,6 @@ def makePlot(AM):
         plot.plot(data, xlim=xlim, fname=options['--output'], plot_type='bar',
                   legend=legend,
                   title='Steamplog ('+options['--output']+')')
-        print('\'' + options['--output'] + '.png\'')
-    elif options['--individual']:
-        for app in AM.applist:
-            app_data = {}
-            for date, minutes in zip(app.date, app.playtime):
-                if date in app_data:
-                    app_data[date] = app_data[date] + minutes
-                else:
-                    app_data[date] = minutes
-
-            data = [(datetime.datetime.utcfromtimestamp(key),
-                     app_data[key]) for key in app_data]
-            data.sort()
-            plot.plot(data, xlim=xlim, fname='plots/'+app.name,
-                      plot_type=plot_type, title=app.name)
-            print('\'plots/' + app.name + '.png\'')
-            app_data.clear()
-            data[:] = []
-    else:  # plot all in one plot
-        if options['--output'] is None:
-            options['--output'] = 'plot_all'
-        data = merge_playtimes(AM.applist)
-        plot.plot(data, xlim=xlim, fname=options['--output'],
-                  plot_type=plot_type, title='Steamplog')
         print('\'' + options['--output'] + '.png\'')
 
 
