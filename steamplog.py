@@ -31,7 +31,7 @@ from __future__ import print_function
 import sys
 import json
 import time
-import datetime
+from datetime import datetime
 from docopt import docopt
 
 
@@ -86,7 +86,7 @@ def main(argv=None):
     if options['plot']:
         # Set options
         if options['<DATE_TO>'] == None:
-            AM.set_to(utils.datetime2unix(datetime.datetime.now()))
+            AM.set_to(utils.datetime2unix(datetime.now()))
         else:
             AM.set_to(utils.datetime2unix(parse_date(options['<DATE_TO>'])))
         if options['<DATE_FROM>'] == None:
@@ -96,8 +96,8 @@ def main(argv=None):
                 parse_date(options['<DATE_FROM>'])))
         # Set date to all available logs
         if options['--all']:
-            AM.set_to(utils.datetime2unix(datetime.datetime.now()))
-            AM.set_from(utils.datetime2unix(datetime.datetime(2014, 6, 1)))
+            AM.set_to(utils.datetime2unix(datetime.now()))
+            AM.set_from(utils.datetime2unix(datetime(2014, 6, 1)))
 
         if options['--verbose']:
             print('Plotting...')
@@ -121,7 +121,7 @@ def main(argv=None):
                 owned_games['games']]
         # Choose date to log
         if options['<DATE>'] is None:
-            now = utils.round_datetime(datetime.datetime.utcnow())
+            now = utils.round_datetime(datetime.utcnow())
         else:
             now = parse_date(options['<DATE>'])
         AM.db.log_playtime(data, utils.datetime2unix(now))
@@ -132,7 +132,7 @@ def main(argv=None):
 
 
 def parse_date(date):
-    return datetime.datetime.strptime(date, "%Y-%m-%d")
+    return datetime.strptime(date, "%Y-%m-%d")
 
 
 def makePlot(AM):
@@ -156,7 +156,7 @@ def makePlot(AM):
             for d, m in zip(app.date, app.playtime):
                 if d not in offset:
                     offset[d] = 0
-                one_data.append((datetime.datetime.utcfromtimestamp(d),
+                one_data.append((datetime.utcfromtimestamp(d),
                                  m, offset[d]))
                 offset[d] = int(offset[d] + m)
             data.append(copy.copy(one_data))
@@ -178,7 +178,7 @@ def merge_playtimes(app_list):
     for app in app_list:
         for d, m in zip(app.date, app.playtime):
             playtime[d] = playtime[d] + m if d in playtime else m
-    return [(utils.unix2datetime(d), playtime[d]) for d in playtime]
+    return [(utils.unix2datetime(d, playtime[d]) for d in playtime]
 
 
 if __name__ == "__main__":
