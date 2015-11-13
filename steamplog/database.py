@@ -1,11 +1,5 @@
-import time
-from datetime import datetime
-import sys
-
-
 #import MySQLdb
 import sqlite3
-import steamplog.utils as utils
 
 
 '''
@@ -114,6 +108,28 @@ class MySQLDB(object):
         self.conn.commit()
 
     # appnames table
+            if self.cursor.fetchall():
+                self.cursor.execute(
+                        'UPDATE ' + table + ' '
+                        'SET minutes_played=%s '
+                        'WHERE app_id=%s AND logged_at=%s',
+                        (app_data[1], app_data[0], time_in_unix))
+                continue
+            # ... or insert new log
+            self.cursor.execute(
+                    'SELECT app_id, minutes_played, logged_at '
+                    'FROM ' + table + ' '
+                    'WHERE app_id=%s AND minutes_played=%s',
+                    (app_data[0], app_data[1]))
+            if not self.cursor.fetchall():
+                self.cursor.execute(
+                        'INSERT INTO ' + table + ' '
+                        '(app_id, minutes_played, logged_at) '
+                        'VALUES (%s, %s, %s)',
+                        (app_data[0], app_data[1], time_in_unix))
+        self.conn.commit()
+
+    # appnames table
     def update_appnames_table(self, app_list):
         self.cursor.executemany(
             'REPLACE INTO app_names'
@@ -132,17 +148,18 @@ class MySQLDB(object):
 '''
 
 class SQLiteDB(object):
-    def __init__(self):
-        self.db = sqlite3.connect(
-            'steamplog.db',
-            )
+    def __init__(self, database_name):
+        self.db = sqlite3.connect(database_name)
         self.cursor = self.db.cursor()
 
     def close(self):
         self.db.close()
 
-    # misc. operations:
-    def create_tables(self):
+    # setup operations
+    def setup_tables(self):
+        '''
+        Create tables that store user-data
+        '''
         self.db.execute(
             'CREATE TABLE IF NOT EXISTS playtime\n'
             '    (\n'
@@ -161,11 +178,11 @@ class SQLiteDB(object):
             )
         self.db.commit()
 
-    def tidy(self):
-        self.cursor.execute('DELETE FROM playtime WHERE app_id = 0')
-
     # playtime table
     def select_apps(self, unix_from, unix_to):
+        '''
+        Retrieve app_ids which logged in given timeframe
+        '''
         self.cursor.execute(
                 'SELECT app_id, logged_at FROM playtime '
                 'WHERE (?) <= logged_at AND logged_at <= (?) GROUP BY app_id',
@@ -174,6 +191,9 @@ class SQLiteDB(object):
         return [app[0] for app in result]
 
     def select_minutes(self, app_id, unix_from, unix_to):
+        '''
+        Retrieve tuple containing timestamp and minutes for 1 game
+        '''
         self.cursor.execute(
                 'SELECT logged_at, max(minutes_played) '
                 'FROM playtime '
@@ -181,10 +201,9 @@ class SQLiteDB(object):
                 (app_id, unix_from))
         result = self.cursor.fetchall()
         if result[0][0] == None:
-            result = [(unix_from-86400, 0)]
+            result = [(unix_from-86400, 0)]  # 86400 equals 1 day
         else:
             result = [result[0]]
-
         # Get data in specified range
         self.cursor.execute(
                 'SELECT logged_at, minutes_played '
@@ -198,10 +217,10 @@ class SQLiteDB(object):
         for app_data in data:
             # Update old minutes_played ...
             self.cursor.execute(
-                    'SELECT app_id, logged_at '
-                    'FROM playtime '
-                    'WHERE app_id=(?) AND logged_at=(?)',
-                    (app_data[0], unix_timestamp))
+                'SELECT app_id, logged_at '
+                'FROM playtime '
+                'WHERE app_id=(?) AND logged_at=(?)',
+                (app_data[0], unix_timestamp))
             if self.cursor.fetchall():
                 self.cursor.execute(
                     'UPDATE playtime '
@@ -211,36 +230,23 @@ class SQLiteDB(object):
                 continue
             # ... or insert new log
             self.cursor.execute(
-                    'SELECT app_id, minutes_played, logged_at '
-                    'FROM playtime '
-                    'WHERE app_id=(?) AND minutes_played=(?)',
-                    (app_data[0], app_data[1]))
+                'SELECT app_id, minutes_played, logged_at '
+                'FROM playtime '
+                'WHERE app_id=(?) AND minutes_played=(?)',
+                (app_data[0], app_data[1]))
             if not self.cursor.fetchall():
                 self.cursor.execute(
-                        'INSERT INTO playtime '
-                        '(app_id, minutes_played, logged_at) '
-                        'VALUES (?,?,?)',
-                        (app_data[0], app_data[1], unix_timestamp))
+                    'INSERT INTO playtime '
+                    '(app_id, minutes_played, logged_at) '
+                    'VALUES (?,?,?)',
+                    (app_data[0], app_data[1], unix_timestamp))
             self.db.commit()
-
-    def select_max_minutes(self):
-        self.cursor.execute(
-                'SELECT app_id '
-                'FROM playtime '
-                'GROUP BY app_id ORDER by minutes_played DESC')
-        result = self.cursor.fetchall()
-        app_list = ()
-        for app_id in result:
-            self.cursor.execute(
-                    'SELECT app_id, MAX(minutes_played) '
-                    'FROM playtime '
-                    ' WHERE app_id = (?)', app_id)
-            result = self.cursor.fetchall()
-            app_list = app_list + ((result[0]),)
-        return app_list
 
     # appnames table
     def update_appnames_table(self, applist):
+        '''
+        Insert new game titles into db
+        '''
         self.db.executemany(
             'REPLACE INTO app_names'
             '(app_id, name)'
@@ -248,14 +254,13 @@ class SQLiteDB(object):
             )
         self.db.commit()
 
-    def select_appnames(self, app_id):
+    def retrieve_app_name(self, app_id):
         self.cursor.execute(
-                'SELECT app_id, name FROM app_names WHERE app_id = (?)',
-                (app_id,))
+            'SELECT app_id, name FROM app_names WHERE app_id = (?)',
+            (app_id,))
         name = self.cursor.fetchall()
         if name == []:
-            print 'something bad happened'
-            print app_id
-            return 'uh oh'
+            print("%d was not found in database" % app_id)
+            return []
         else:
             return name[0][1]

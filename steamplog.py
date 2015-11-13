@@ -3,9 +3,8 @@
 
 usage:
   steamplog.py log [<DATE>]
-  steamplog.py plot [bar | point | line] [<DATE_FROM> [<DATE_TO>]]
+  steamplog.py plot [<DATE_FROM> [<DATE_TO>]]
                     [-lc] [-o FILE] [-v]
-  steamplog.py update-appnames
   steamplog.py stats [--full]
 
 plot options:
@@ -20,7 +19,6 @@ plot options:
 
 stats options:
   --full            print every game
-
 other:
   -v, --verbose  be verbose
   -h, --help     show this help
@@ -29,16 +27,13 @@ other:
 
 from __future__ import print_function
 import sys
-import json
-import time
 from datetime import datetime
 from docopt import docopt
 
-
 from steamplog.config import Config
-from steamplog.gamemgr import AppMGR, App
-import steamplog.plot as plot
-import steamplog.utils as utils
+from steamplog.downloader import Downloader
+from steamplog.gamemgr import GameManager
+from steamplog.plot import plot
 
 
 def main(argv=None):
@@ -53,132 +48,96 @@ def main(argv=None):
     config = Config()
     config.load()
 
-    AM = AppMGR(config.DB_engine,
-                date_limit=config.date_limit)
+    # Create GameManager
+    GM = GameManager(config.Steam_ID)
 
-    if options['--verbose']:
-        print('Engine:', config.DB_engine)
-    AM.db.create_tables()
+    # Download the newest data
+    if options['log'] or options['stats']:
+        dl = Downloader(config.API_key)
+        games = dl.download_stats(config.Steam_ID)
 
-    if options['update-appnames']:
-        print(application_name + \
-                ': INFO: This might take a while', file=sys.stderr)
-        AM.update_names()
-        AM.db.close()
-        sys.exit(0)
+        GM.games = GM.prepare(games)
 
+    # Stats
     if options['stats']:
-        AM.get_max_minutes()
-        total_sum = 0
-        for app in AM.applist:
-            total_sum = total_sum + app.playtime
-        print('Steam total playtime:', "%0.2f" % (total_sum/60.0), 'hours', \
-              "(%0.2f days)" % (total_sum/60.0/24.0))
-        print('')
-        if options['--full']:
-            for game in AM.applist:
-                print("%0.2f" % (game.playtime/60.0), 'hours','\t', game.name)
-        else:
-            for game in AM.applist[:10]:
-                print("%0.2f" % (game.playtime/60.0), 'hours','\t', game.name)
-        sys.exit(0);
-
-    if options['plot']:
-        # Set options
-        if options['<DATE_TO>'] == None:
-            AM.set_to(utils.datetime2unix(datetime.now()))
-        else:
-            AM.set_to(utils.datetime2unix(parse_date(options['<DATE_TO>'])))
-        if options['<DATE_FROM>'] == None:
-            AM.set_from(AM.get_to() - 1209600)
-        else:
-            AM.set_from(utils.datetime2unix(
-                parse_date(options['<DATE_FROM>'])))
-        # Set date to all available logs
-        if options['--all']:
-            AM.set_to(utils.datetime2unix(datetime.now()))
-            AM.set_from(utils.datetime2unix(datetime(2014, 6, 1)))
-
-        if options['--verbose']:
-            print('Plotting...')
-        AM.games_played = AM.find_games_played()
-        AM.process_games_played()
-        AM.sort_most_played()
-        makePlot(AM)
-        AM.db.close()
-        sys.exit(0)
-
-    owned_games = utils.get_owned_games(config.API_key, config.Steam_ID)
-
-    if 'games' not in owned_games:
-        print(application_name + ': ERROR: No games found', file=sys.stderr)
-        AM.db.close()
+        print('Current stats')
+        for game in GM.games:
+            print(game[1], '\t', GM.retrieve_appname(game[0]))
         sys.exit(0)
 
     # Log
     if options['log']:
-        data = [(x['appid'], x['playtime_forever']) for x in
-                owned_games['games']]
         # Choose date to log
         if options['<DATE>'] is None:
-            now = utils.round_datetime(datetime.utcnow())
+            n = datetime.utcnow()
+            unix_timestamp = int((n - datetime(1970, 1, 1)).total_seconds())
         else:
-            now = parse_date(options['<DATE>'])
-        AM.db.log_playtime(data, utils.datetime2unix(now))
-        time.sleep(10)
+            n = parse_date(options['<DATE>'])
+            unix_timestamp = int((datetime(n.year, n.month, n.day, 23, 59) -
+                                  datetime(1970, 1, 1)).total_seconds())
+        GM.log(unix_timestamp)
+        sys.exit(0)
 
-    # Disconnect from database
-    AM.db.close()
+    # Plot
+    if options['plot']:
+        if options['<DATE_TO>'] is None:
+            n = datetime.utcnow()
+        else:
+            n = parse_date(options['<DATE_TO>'])
+        unix_to = int((datetime(n.year, n.month, n.day, 23, 59) -
+                       datetime(1970, 1, 1)).total_seconds())
+        if options['<DATE_FROM>'] is None:
+            unix_from = unix_to - 1210000  # 14 days in seconds
+        else:
+            n = parse_date(options['<DATE_FROM>'])
+            unix_from = int((datetime(n.year, n.month, n.day, 23, 59) -
+                            datetime(1970, 1, 1)).total_seconds())
+        # Get data
+        GM.retrieve_log(unix_from, unix_to)
+        # Sort
+        GM.sort_most_played()
+        make_plot(GM, unix_from, unix_to)
 
 
 def parse_date(date):
     return datetime.strptime(date, "%Y-%m-%d")
 
 
-def makePlot(AM):
+def make_plot(GM, unix_from, unix_to):
     import copy
+    import pytz
     # Set x-limits
-    xlim = (AM.get_dt_from(), AM.get_dt_to())
+    xlim = (datetime.utcfromtimestamp(unix_from),
+            datetime.utcfromtimestamp(unix_to))
 
-    if not AM.applist:
-        info = application_name + ': INFO: No data found between ' + \
-            AM.get_dt_from().strftime("%Y-%m-%d") + ' and ' + \
-            AM.get_dt_to().strftime("%Y-%m-%d")
-        print(info, file=sys.stderr)
-        sys.exit(0)
-
-    if options['--color']:  # different color apps
+    if options['--color']:
         data = []
         offset = {}
-        # Combine all minutes off all apps
-        for app in AM.applist:
-            one_data = []
-            for d, m in zip(app.date, app.playtime):
+        # Combine all minutes
+        for app in GM.applist:
+            one_data = []  # What is this?
+            for d, m in zip(app.log_date, app.playtime):
                 if d not in offset:
                     offset[d] = 0
-                one_data.append((datetime.utcfromtimestamp(d),
-                                 m, offset[d]))
+                utc = datetime.utcfromtimestamp(d)
+                utc = utc.replace(tzinfo=pytz.utc)
+                tz = 'Europe/Vienna'
+                one_data.append((utc.astimezone(pytz.timezone(tz)),
+                                m, offset[d]))
                 offset[d] = int(offset[d] + m)
-            data.append(copy.copy(one_data))
+            data.append(copy.copy(one_data))  # why use copy?
             one_data[:] = []
+        # Set legend
         if options['--legend']:
-            legend = [app.name[:25] for app in AM.applist[:10]] + ['Other']
+            legend = [app.name[:25] for app in GM.applist[:10]] + ['Other']
         else:
             legend = None
+        # Set filename
         if options['--output'] is None:
             options['--output'] = 'plot_detailed'
-        plot.plot(data, xlim=xlim, fname=options['--output'], plot_type='bar',
-                  legend=legend,
-                  title='Steamplog ('+options['--output']+')')
+        plot(data, xlim=xlim, fname=options['--output'], plot_type='bar',
+             legend=legend, title='Steamplog ('+options['--output']+')')
         print('\'' + options['--output'] + '.png\'')
-
-
-def merge_playtimes(app_list):
-    playtime = {}
-    for app in app_list:
-        for d, m in zip(app.date, app.playtime):
-            playtime[d] = playtime[d] + m if d in playtime else m
-    return [(utils.unix2datetime(d, playtime[d]) for d in playtime]
 
 
 if __name__ == "__main__":
