@@ -2,7 +2,7 @@
 """steamplog - log and plot your steam gaming time
 
 usage:
-  steamplog.py log
+  steamplog.py log [<DATE>]
   steamplog.py plot [bar | point | line] [-a | [<DATE_FROM>] [<DATE_TO>]]
                     [-lc] [-o FILE | -i] [-v]
   steamplog.py update-appnames
@@ -117,10 +117,15 @@ def main(argv=None):
         AM.db.close()
         sys.exit(0)
 
+    # Log
     if options['log']:
         data = [(x['appid'], x['playtime_forever']) for x in
                 owned_games['games']]
-        now = utils.round_datetime(datetime.datetime.utcnow())
+        # Choose date to log
+        if options['<DATE>'] is None:
+            now = utils.round_datetime(datetime.datetime.utcnow())
+        else:
+            now = parse_date(options['<DATE>'])
         AM.db.log_playtime(data, utils.datetime2unix(now))
         time.sleep(10)
 
