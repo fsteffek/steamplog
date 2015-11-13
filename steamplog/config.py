@@ -9,6 +9,7 @@ class Config(object):
             self.path = path
         self.API_key = None
         self.Steam_ID = None
+        self.tz = 'UTC'
 
     def load(self):
         try:
@@ -21,11 +22,13 @@ class Config(object):
             json_dict = json.load(a_file)
         self.API_key = json_dict['API key']
         self.Steam_ID = json_dict['Steam ID']
+        self.tz = json_dict['Timezone']
 
     def reset(self):
         json_str = json.dumps(
             {'API key': 'YourKey',
-             'Steam ID': 'YourID'},
+             'Steam ID': 'YourID',
+             'Timezone': 'UTC'},
             sort_keys=False, indent=4, separators=(',', ': '))
         with open(self.path, 'w') as a_file:
             a_file.write(json_str)

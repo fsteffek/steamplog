@@ -96,14 +96,14 @@ def main(argv=None):
         GM.retrieve_log(unix_from, unix_to)
         # Sort
         GM.sort_most_played()
-        make_plot(GM, unix_from, unix_to)
+        make_plot(GM, unix_from, unix_to, config.tz)
 
 
 def parse_date(date):
     return datetime.strptime(date, "%Y-%m-%d")
 
 
-def make_plot(GM, unix_from, unix_to):
+def make_plot(GM, unix_from, unix_to, tz):
     import copy
     import pytz
     # Set x-limits
@@ -121,7 +121,6 @@ def make_plot(GM, unix_from, unix_to):
                     offset[d] = 0
                 utc = datetime.utcfromtimestamp(d)
                 utc = utc.replace(tzinfo=pytz.utc)
-                tz = 'Europe/Vienna'
                 one_data.append((utc.astimezone(pytz.timezone(tz)),
                                 m, offset[d]))
                 offset[d] = int(offset[d] + m)
